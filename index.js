@@ -42,7 +42,7 @@ const resetStatusActivity = () => {
     { 
       activities: [
         { 
-          name: `you 🎶`, //▶︎Henceforth you 🎶
+          name: `your requests 🎶`, //▶︎Henceforth you 🎶
           type: 'LISTENING',
         }
       ],
@@ -72,8 +72,9 @@ player.on("trackStart", (queue, track) => {
       status: 'online'
     }
   )
+  if(queue.guild.id !== `848169570954641438`) return
   // queue.metadata.channel.send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!`)
-  luka.guilds.cache.get('848169570954641438').channels.cache.get('890153344956514335').send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!\n${track.url}`)
+  queue.guild.channels.cache.get('890153344956514335').send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!\n${track.url}`)
 })
 
 player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | Track **${track.title}** queued!`))
@@ -98,11 +99,8 @@ luka.on('interactionCreate', async interaction => {
   try{
     if(!interaction.inGuild()) return
     if(!interaction.isCommand()) return
-    if(interaction.commandName !== `megu`) return
-    
-    const SUB_COMMANDS = interaction.options.getSubcommand()
 
-    const command = luka.commands.get(SUB_COMMANDS)
+    const command = luka.commands.get(interaction.commandName)
     command.execute(interaction, player, luka)    
 
   } catch(e) {
@@ -116,64 +114,65 @@ luka.on('interactionCreate', async interaction => {
 
 luka.on('voiceStateUpdate', async (oldState, newState) => {
   try{
-    const altria = luka.guilds.cache.get('848169570954641438')
-    const member = altria.members.cache.get(newState.id)
-    const voiceState = member.voice
-    const presence = member.presence
-    const user = member.user
+        if(newState.guild.id !== `848169570954641438`) return
+        const altria = luka.guilds.cache.get(newState.guild.id)
+        const member = altria.members.cache.get(newState.id)
+        const voiceState = member.voice
+        const presence = member.presence
+        const user = member.user
 
-    const games_vc = await GAMES_VC.find()
+        const games_vc = await GAMES_VC.find()
 
-    if(user.bot) return 
+        if(user.bot) return 
 
-    const queue = player.getQueue(altria.id)
-    if(!queue) return
-    const current = queue.current
-    const tracks = queue.tracks 
+        const queue = player.getQueue(altria.id)
+        if(!queue) return
+        const current = queue.current
+        const tracks = queue.tracks 
 
-    if(!voiceState) return
-    if(!voiceState.channel) {
-      if(tracks.length < 1) return
+        if(!voiceState) return
+        if(!voiceState.channel) {
+        if(tracks.length < 1) return
 
-      const hasRequest = tracks.find(track => track.requestedBy.id === user.id)
+        const hasRequest = tracks.find(track => track.requestedBy.id === user.id)
 
-      if(!hasRequest) return // No Request Found
+        if(!hasRequest) return // No Request Found
 
-      const requestedTracks = tracks.filter(track => track.requestedBy.id !== user.id)
+        const requestedTracks = tracks.filter(track => track.requestedBy.id !== user.id)
 
-      if(requestedTracks.length < 1) { // Request from other users
-        queue.destroy()
-        if(queue.destroyed) return console.log("Cannot go further because the queue is destroyed")
-        return
-      }
+        if(requestedTracks.length < 1) { // Request from other users
+            queue.destroy()
+            if(queue.destroyed) return console.log("Cannot go further because the queue is destroyed")
+            return
+        }
 
-      queue.clear()
-      queue.addTracks(requestedTracks)
-      const skippable = current.requestedBy.id === user.id ? queue.skip() : false
+        queue.clear()
+        queue.addTracks(requestedTracks)
+        const skippable = current.requestedBy.id === user.id ? queue.skip() : false
 
-      if(!skippable) return
+        if(!skippable) return
 
-      const prevTrack = queue.previousTracks.length !== 0 ? queue.previousTracks[0] : false
+        const prevTrack = queue.previousTracks.length !== 0 ? queue.previousTracks[0] : false
 
-      if(!prevTrack) return
+        if(!prevTrack) return
 
-      if(prevTrack.requestedBy.id === user.id) {
-        const getPos = queue.getTrackPosition(prevTrack)
-        return queue.remove(getPos)
-      }
+        if(prevTrack.requestedBy.id === user.id) {
+            const getPos = queue.getTrackPosition(prevTrack)
+            return queue.remove(getPos)
+        }
+        }
+
+        if(oldState.channelId === newState.channelId) return
+        if(current.requestedBy.id !== user.id) return
+
+        const inFarSide = games_vc.find(data => data.vc === voiceState.channel.id)
+        if(!inFarSide) return
+
+        const vcToJoin = altria.channels.cache.get(voiceState.channel.id)
+        return altria.me.voice.setChannel(vcToJoin)
+    } catch(e) {
+        console.log(e)
     }
-
-    if(oldState.channelId === newState.channelId) return
-    if(current.requestedBy.id !== user.id) return
-
-    const inFarSide = games_vc.find(data => data.vc === voiceState.channel.id)
-    if(!inFarSide) return
-
-    const vcToJoin = altria.channels.cache.get(voiceState.channel.id)
-    return altria.me.voice.setChannel(vcToJoin)
-  } catch(e) {
-    console.log(e)
-  }
 })
 
 luka.once('ready', async () => {
@@ -196,9 +195,9 @@ luka.once('ready', async () => {
 
   // MANAGER_CMD.permissions.add({ permissions: [manager_permissions] }).then(console.log)
 
-  // await slashCommands(luka)
+//   await slashCommands(luka)
   const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
-  console.log(`Luka went online~\nDate: ${datenow}`)
+  console.log(`Seraphine went online~\nDate: ${datenow}`)
 })
 
 luka.once('reconnecting', () => {
