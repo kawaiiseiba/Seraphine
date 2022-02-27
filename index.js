@@ -6,6 +6,8 @@ const Client = require('./client/Client')
 const luka = new Client()
 luka.commands = new Discord.Collection()
 
+const OfficialServer = process.env.OfficialServer
+
 const mongoose = require('mongoose')
 mongoose.connect(process.env.AkashicRecords, { 
   useNewUrlParser: true, 
@@ -72,7 +74,7 @@ player.on("trackStart", (queue, track) => {
       status: 'online'
     }
   )
-  if(queue.guild.id !== `848169570954641438`) return
+  if(queue.guild.id !== OfficialServer) return
   // queue.metadata.channel.send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!`)
   queue.guild.channels.cache.get('890153344956514335').send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!\n${track.url}`)
 })
@@ -84,7 +86,7 @@ player.on('trackEnd', (queue, track) => {
 })
 
 player.on('botDisconnect', queue => {
-  queue.metadata.channel.send('❌ | I was manually disconnected from the voice channel, clearing queue!')
+  queue.metadata.channel.send('❌ | **I was manually disconnected from the voice channel, clearing queue!**')
   resetStatusActivity()
 })
 
@@ -114,7 +116,7 @@ luka.on('interactionCreate', async interaction => {
 
 luka.on('voiceStateUpdate', async (oldState, newState) => {
   try{
-        if(newState.guild.id !== `848169570954641438`) return
+        if(newState.guild.id !== OfficialServer) return
         const altria = luka.guilds.cache.get(newState.guild.id)
         const member = altria.members.cache.get(newState.id)
         const voiceState = member.voice
@@ -184,7 +186,7 @@ luka.once('ready', async () => {
   *
   *************************************/
 
-  // const GUILD = luka.guilds.cache.get('848169570954641438')
+  // const GUILD = luka.guilds.cache.get(OfficialServer)
   // const MANAGER_CMD = await GUILD.commands.fetch('915845240445886484')
 
   // const manager_permissions = {
@@ -195,7 +197,7 @@ luka.once('ready', async () => {
 
   // MANAGER_CMD.permissions.add({ permissions: [manager_permissions] }).then(console.log)
 
-//   await slashCommands(luka)
+  await slashCommands(luka)
   const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
   console.log(`Seraphine went online~\nDate: ${datenow}`)
 })

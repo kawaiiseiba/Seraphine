@@ -31,6 +31,8 @@ module.exports = {
             return `\`${i+1}.\` [${v.title}](${v.url})\n\`${v.duration} Requested by: ${v.requestedBy.tag}\``
         })
 
+        console.log(queue.previousTracks)
+
         // console.log(current)
         // console.log(upNext)
 
