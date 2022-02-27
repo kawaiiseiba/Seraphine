@@ -3,135 +3,135 @@ const { QueueRepeatMode } = require('discord-player')
 
 module.exports = async luka => {
 
-    // const commands = [
-    //     {
-    //         name: 'back',
-    //         description: 'Play the previous track'
-    //     },
-    //     {
-    //         name: 'clear',
-    //         description: 'Clear the current queue'
-    //     },
-    //     {
-    //         name: 'help',
-    //         description: `Shows information about available commands`
-    //     },
-    //     {
-    //         name: 'jump',
-    //         description: 'Jump to a specific track',
-    //         options: [
-    //             {
-    //                 name: 'tracks',
-    //                 description: 'The number of tracks to skip',
-    //                 type: 4,
-    //                 required: true
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         name: 'loop',
-    //         description: 'Set loop mode',
-    //         options: [
-    //             {
-    //                 name: 'mode',
-    //                 type: 4,
-    //                 description: 'Loop type',
-    //                 required: true,
-    //                 choices: [
-    //                     {
-    //                         name: 'Off',
-    //                         value: QueueRepeatMode.OFF,
-    //                     },
-    //                     {
-    //                         name: 'Track',
-    //                         value: QueueRepeatMode.TRACK,
-    //                     },
-    //                     {
-    //                         name: 'Queue',
-    //                         value: QueueRepeatMode.QUEUE,
-    //                     },
-    //                     {
-    //                         name: 'Autoplay',
-    //                         value: QueueRepeatMode.AUTOPLAY,
-    //                     },
-    //                 ]
-    //             },
-    //         ]
-    //     },
-    //     {
-    //         name: 'nowplaying',
-    //         description: `See what's currently being played`
-    //     },
-    //     {
-    //         name: 'pause',
-    //         description: 'Pause the current song'
-    //     },
-    //     {
-    //         name: 'play',
-    //         description: 'Play Youtube/Spotify music',
-    //         options: [
-    //             {
-    //                 name: 'search',
-    //                 description: 'Search through youtube or use youtube/spotify links or playlist links',
-    //                 type: 3,
-    //                 required: true
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         name: 'playnext',
-    //         description: 'Add a song to the top of the queue',
-    //         options: [
-    //             {
-    //                 name: 'search',
-    //                 description: 'Search through youtube or use youtube/spotify links or playlist links',
-    //                 type: 3,
-    //                 required: true
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         name: 'queue',
-    //         description: 'Shows all currently enqueued songs'
-    //     },
-    //     {
-    //         name: 'remove',
-    //         description: 'Remove a specific track',
-    //         options: [
-    //             {
-    //                 name: 'track',
-    //                 type: 4,
-    //                 description: 'The track number you want to remove',
-    //                 required: true
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         name: 'resume',
-    //         description: 'Resume the current song'
-    //     },
-    //     {
-    //         name: 'shuffle',
-    //         description: 'Shuffle the queue'
-    //     },
-    //     {
-    //         name: 'skip',
-    //         description: 'Skip to the current song'
-    //     },
-    //     {
-    //         name: 'stop',
-    //         description: 'Luka will stop playing'
-    //     }
-    // ]
+    const commands = [
+        {
+            name: 'back',
+            description: 'Play the previous track'
+        },
+        {
+            name: 'clear',
+            description: 'Clear the current queue'
+        },
+        {
+            name: 'help',
+            description: `Shows information about available commands`
+        },
+        {
+            name: 'jump',
+            description: 'Jump to a specific track',
+            options: [
+                {
+                    name: 'tracks',
+                    description: 'The number of tracks to skip',
+                    type: 4,
+                    required: true
+                }
+            ]
+        },
+        {
+            name: 'loop',
+            description: 'Set loop mode',
+            options: [
+                {
+                    name: 'mode',
+                    type: 4,
+                    description: 'Loop type',
+                    required: true,
+                    choices: [
+                        {
+                            name: 'Off',
+                            value: QueueRepeatMode.OFF,
+                        },
+                        {
+                            name: 'Track',
+                            value: QueueRepeatMode.TRACK,
+                        },
+                        {
+                            name: 'Queue',
+                            value: QueueRepeatMode.QUEUE,
+                        },
+                        {
+                            name: 'Autoplay',
+                            value: QueueRepeatMode.AUTOPLAY,
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            name: 'nowplaying',
+            description: `See what's currently being played`
+        },
+        {
+            name: 'pause',
+            description: 'Pause the current song'
+        },
+        {
+            name: 'play',
+            description: 'Play Youtube/Spotify music',
+            options: [
+                {
+                    name: 'search',
+                    description: 'Search through youtube or use youtube/spotify links or playlist links',
+                    type: 3,
+                    required: true
+                }
+            ]
+        },
+        {
+            name: 'playnext',
+            description: 'Add a song to the top of the queue',
+            options: [
+                {
+                    name: 'search',
+                    description: 'Search through youtube or use youtube/spotify links or playlist links',
+                    type: 3,
+                    required: true
+                }
+            ]
+        },
+        {
+            name: 'queue',
+            description: 'Shows all currently enqueued songs'
+        },
+        {
+            name: 'remove',
+            description: 'Remove a specific track',
+            options: [
+                {
+                    name: 'track',
+                    type: 4,
+                    description: 'The track number you want to remove',
+                    required: true
+                }
+            ]
+        },
+        {
+            name: 'resume',
+            description: 'Resume the current song'
+        },
+        {
+            name: 'shuffle',
+            description: 'Shuffle the queue'
+        },
+        {
+            name: 'skip',
+            description: 'Skip the current song'
+        },
+        {
+            name: 'stop',
+            description: `${luka.user.username} will stop playing`
+        }
+    ]
 
-    // commands.map(i => {
-    //     setTimeout(async () => {
-    //         await luka.api.applications(luka.user.id).commands.post({
-    //             data: i
-    //         }).then(console.log)
-    //         .catch(console.error)
-    //     }, 3000)
-    // })
+    commands.map(i => {
+        setTimeout(async () => {
+            await luka.api.applications(luka.user.id).commands.post({
+                data: i
+            }).then(`Success: ${i.name}`)
+            .catch(console.error)
+        }, 3000)
+    })
 
     // await luka.api.applications(luka.user.id).guilds('848169570954641438').commands('914917434157334589').delete()
 
