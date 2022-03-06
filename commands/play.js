@@ -12,11 +12,11 @@ module.exports = {
             required: true
         }
     ],
-    async execute(interaction, player, luka, misc = []) {
+    async execute(interaction, player, luka) {
 
         const query = interaction.type === `APPLICATION_COMMAND` ? 
-        interaction.options.getString('search') : 
-        interaction.content.substring(interaction.content.indexOf(' ') + 1)
+            interaction.options.getString('search') : 
+            interaction.content.substring(interaction.content.indexOf(' ') + 1)
 
         const vc = interaction.member.voice
 
@@ -61,8 +61,8 @@ module.exports = {
         const result = `⏱ | Loading your ${searchResult.playlist ? 'playlist' : 'track'}...`
 
         interaction.type === `APPLICATION_COMMAND` ? 
-        await interaction.followUp({ content: result }) :
-        await interaction.reply({ content: result })
+            await interaction.followUp({ content: result }) :
+            await interaction.reply({ content: result })
 
         searchResult.playlist ? queue.addTracks(searchResult.tracks) : queue.addTrack(searchResult.tracks[0])
         if (!queue.playing) await queue.play()

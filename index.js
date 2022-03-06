@@ -88,21 +88,18 @@ luka.on('interactionCreate', async interaction => {
         if(!interaction.inGuild()) return await interaction.reply({ content: `⚠️ **This command cannot be used in private messages**`})
         if(!interaction.isCommand()) return
 
-        const data = (await settings.find())[0]
+        const application_settings = (await settings.find()).find(data => data.application_id === luka.user.id)
 
-        if(!data) return await interaction.reply({
-            content: `There's something wrong within our servers, please wait for a while and try again.`,
-            ephemeral: true
+        if(!application_settings) return await msg.reply({
+            content: `There's something wrong within our servers, please wait for a while and try again.`
         })
 
-        if(data.isMaintenance.isExist) return await interaction.reply({
+        if(application_settings.isMaintenance.isExist) return await interaction.reply({
             content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
         })
 
-        const misc = [ data.reminders.isExist, data.isDonationNeeded.isExist ]
-
         const command = luka.commands.get(interaction.commandName)
-        command.execute(interaction, player, luka, misc)    
+        command.execute(interaction, player, luka)    
 
     } catch(e) {
         console.log(e);
@@ -115,11 +112,26 @@ luka.on('interactionCreate', async interaction => {
 luka.on('messageCreate', async msg => {
     if(msg.author.bot) return
     if(msg.channel.type == 'DM') return await msg.reply({ content: `⚠️ **Command cannot be used in private messages**`})
-    if(!msg.content.startsWith('.')) return
+
+    const application_settings = (await settings.find()).find(data => data.application_id === luka.user.id)
+
+    if(!application_settings) return await msg.reply({
+        content: `There's something wrong within our servers, please wait for a while and try again.`
+    })
+
+    const default_prefix = application_settings.server_prefix.find(data => data.guild_id === msg.guild.id) ? 
+        (application_settings.server_prefix.find(data => data.guild_id === msg.guild.id)).prefix : 
+        application_settings.default_prefix
+
+    if(!msg.content.startsWith(default_prefix)) return
 
     const content = msg.content
     const pos_command = content.substring(0, content.indexOf(' '))
+
     if(!pos_command) return
+    if(application_settings.isMaintenance.isExist) return await interaction.reply({
+        content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
+    })
 
     const command = luka.commands.get(pos_command.substring(1))
 

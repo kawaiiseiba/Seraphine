@@ -16,6 +16,18 @@ const settings = new mongoose.Schema({
     changelog: [{
         version: String,
         text: String
+    }],
+    application_id: {
+        type: String,
+        required: true
+    },
+    default_prefix: {
+        type: String,
+        required: true
+    },
+    server_prefix: [{
+        guild_id: String,
+        prefix: String
     }]
 }, { collection: 'music_settings' })
 
