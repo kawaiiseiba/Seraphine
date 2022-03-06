@@ -10,171 +10,120 @@ const OfficialServer = process.env.OfficialServer
 
 const mongoose = require('mongoose')
 mongoose.connect(process.env.AkashicRecords, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true
-})
+    useNewUrlParser: true, 
+    useUnifiedTopology: true
+}).catch(console.log)
+
+const settings = require('./schemas/settings')
 
 const GAMES_VC = require('./schemas/games_voice')
 
 const db = mongoose.connection
 db.on('error', e => console.log({ message: e.message }))
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'))
 
 for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  luka.commands.set(command.name, command);
+    const command = require(`./commands/${file}`)
+    luka.commands.set(command.name, command)
 }
 
 const slashCommands = require('./modules/slash-commands')
 
 const { Player, QueueRepeatMode } = require("discord-player")
 const player = new Player(luka)
-// const player = new Player(luka, {
-//   ytdlOptions: {
-//     quality: 'highest',
-//     filter: 'audioonly',
-//     highWaterMark: 1 << 25,
-//     dlChunkSize: 0
-//   }
-// })
 
 const resetStatusActivity = () => {
-  luka.user.setPresence(
-    { 
-      activities: [
+    const status = [
         { 
-          name: `your requests 🎶`, //▶︎Henceforth you 🎶
-          type: 'LISTENING',
-        }
-      ],
-      status: 'online'
-    }
-  )
+            name: `your requests 🎶`,
+            type: 'LISTENING',
+        },
+        { 
+            name: `for donations. 🎶`,
+            type: 'WATCHING',
+        },
+    ]
+
+    luka.user.setPresence({ 
+        activities: [ status[getRandomIntInclusive(0, status.length-1)] ],
+        status: 'online'
+    })
+}
+
+const getRandomIntInclusive = (min, max) => {
+    min = Math.ceil(min)
+    max = Math.floor(max)
+    return Math.floor(Math.random() * (max - min + 1) + min)
 }
   
 player.on('error', (queue, error) => {
-  console.log(`[${queue.guild.name}] Error emitted from the queue: ${error.message}`)
+    console.log(`[${queue.guild.name}] Error emitted from the queue: ${error.message}`)
 })
 
 player.on('connectionError', (queue, error) => {
-  console.log(`[${queue.guild.name}] Error emitted from the connection: ${error.message}`)
-  queue.skip()
+    console.log(`[${queue.guild.name}] Error emitted from the connection: ${error.message}`)
+    queue.skip()
 })
 
 player.on("trackStart", (queue, track) => {
-  luka.user.setPresence(
-    { 
-      activities: [
-        { 
-          name: track.title, //▶︎Henceforth
-          type: 'LISTENING',
-        }
-      ],
-      status: 'online'
-    }
-  )
-  if(queue.guild.id !== OfficialServer) return
-  // queue.metadata.channel.send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!`)
-  queue.guild.channels.cache.get('890153344956514335').send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!\n${track.url}`)
+    if(queue.guild.id !== OfficialServer) return queue.guild.channels.cache.get('890153344956514335').send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!\n${track.url}`)
+    queue.metadata.channel.send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!`)
 })
 
 player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | Track **${track.title}** queued!`))
 
-player.on('trackEnd', (queue, track) => {
-  resetStatusActivity()
-})
-
 player.on('botDisconnect', queue => {
-  queue.metadata.channel.send('❌ | **I was manually disconnected from the voice channel, clearing queue!**')
-  resetStatusActivity()
+    queue.metadata.channel.send('❌ | **I was manually disconnected from the voice channel, clearing queue!**')
 })
 
 player.on('channelEmpty', (queue, track) => queue.metadata.channel.send('❌ | Nobody is in the voice channel, leaving...'))
 
 player.on('queueEnd', (queue, track) => {
-  resetStatusActivity()
-  queue.metadata.channel.send('✅ | **Queue finished!**')
+    queue.metadata.channel.send('✅ | **Queue finished!**')
 })
 
 luka.on('interactionCreate', async interaction => {
-  try{
-    if(!interaction.inGuild()) return
-    if(!interaction.isCommand()) return
+    try{
+        if(!interaction.inGuild()) return await interaction.reply({ content: `⚠️ **This command cannot be used in private messages**`})
+        if(!interaction.isCommand()) return
 
-    const command = luka.commands.get(interaction.commandName)
-    command.execute(interaction, player, luka)    
+        const data = (await settings.find())[0]
 
-  } catch(e) {
-    console.log(error);
-    interaction.followUp({
-      content: 'There was an error trying to execute that command: ' + error.message,
-    })
-  }
+        if(!data) return await interaction.reply({
+            content: `There's something wrong within our servers, please wait for a while and try again.`,
+            ephemeral: true
+        })
+
+        if(data.isMaintenance.isExist) return await interaction.reply({
+            content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
+        })
+
+        const misc = [ data.reminders.isExist, data.isDonationNeeded.isExist ]
+
+        const command = luka.commands.get(interaction.commandName)
+        command.execute(interaction, player, luka, misc)    
+
+    } catch(e) {
+        console.log(e);
+        interaction.followUp({
+            content: 'There was an error trying to execute that command: ' + e.message,
+        })
+    }
 })
 
+luka.on('messageCreate', async msg => {
+    if(msg.author.bot) return
+    if(msg.channel.type == 'DM') return await msg.reply({ content: `⚠️ **Command cannot be used in private messages**`})
+    if(!msg.content.startsWith('.')) return
 
-luka.on('voiceStateUpdate', async (oldState, newState) => {
-  try{
-        if(newState.guild.id !== OfficialServer) return
-        const altria = luka.guilds.cache.get(newState.guild.id)
-        const member = altria.members.cache.get(newState.id)
-        const voiceState = member.voice
-        const presence = member.presence
-        const user = member.user
+    const content = msg.content
+    const pos_command = content.substring(0, content.indexOf(' '))
+    if(!pos_command) return
 
-        const games_vc = await GAMES_VC.find()
+    const command = luka.commands.get(pos_command.substring(1))
 
-        if(user.bot) return 
-
-        const queue = player.getQueue(altria.id)
-        if(!queue) return
-        const current = queue.current
-        const tracks = queue.tracks 
-
-        if(!voiceState) return
-        if(!voiceState.channel) {
-        if(tracks.length < 1) return
-
-        const hasRequest = tracks.find(track => track.requestedBy.id === user.id)
-
-        if(!hasRequest) return // No Request Found
-
-        const requestedTracks = tracks.filter(track => track.requestedBy.id !== user.id)
-
-        if(requestedTracks.length < 1) { // Request from other users
-            queue.destroy()
-            if(queue.destroyed) return console.log("Cannot go further because the queue is destroyed")
-            return
-        }
-
-        queue.clear()
-        queue.addTracks(requestedTracks)
-        const skippable = current.requestedBy.id === user.id ? queue.skip() : false
-
-        if(!skippable) return
-
-        const prevTrack = queue.previousTracks.length !== 0 ? queue.previousTracks[0] : false
-
-        if(!prevTrack) return
-
-        if(prevTrack.requestedBy.id === user.id) {
-            const getPos = queue.getTrackPosition(prevTrack)
-            return queue.remove(getPos)
-        }
-        }
-
-        if(oldState.channelId === newState.channelId) return
-        if(current.requestedBy.id !== user.id) return
-
-        const inFarSide = games_vc.find(data => data.vc === voiceState.channel.id)
-        if(!inFarSide) return
-
-        const vcToJoin = altria.channels.cache.get(voiceState.channel.id)
-        return altria.me.voice.setChannel(vcToJoin)
-    } catch(e) {
-        console.log(e)
-    }
+    command.execute(msg, player, luka)
 })
 
 luka.once('ready', async () => {
@@ -197,18 +146,9 @@ luka.once('ready', async () => {
 
   // MANAGER_CMD.permissions.add({ permissions: [manager_permissions] }).then(console.log)
 
-  await slashCommands(luka)
-  const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
-  console.log(`Seraphine went online~\nDate: ${datenow}`)
-})
-
-luka.once('reconnecting', () => {
-  console.log('Reconnecting!')
-  resetStatusActivity()
-})
-
-luka.once('disconnect', () => {
-  console.log('Disconnect!')
+    // await slashCommands(luka)
+    const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
+    console.log(`Seraphine went online~\nDate: ${datenow}`)
 })
 
 luka.login(process.env.Seraphine)

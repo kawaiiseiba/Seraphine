@@ -12,8 +12,11 @@ module.exports = {
             required: true
         }
     ],
-    async execute(interaction, player, luka) {
-        const query = interaction.options.getString('search')
+    async execute(interaction, player, luka, misc = []) {
+
+        const query = interaction.type === `APPLICATION_COMMAND` ? 
+        interaction.options.getString('search') : 
+        interaction.content.substring(interaction.content.indexOf(' ') + 1)
 
         const vc = interaction.member.voice
 
@@ -21,9 +24,7 @@ module.exports = {
         if (
             interaction.guild.me.voice.channelId &&
             interaction.member.voice.channelId !== interaction.guild.me.voice.channelId
-        ) {
-            return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true, })
-        }
+        ) return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true, })
 
         const queue = player.createQueue(interaction.guild, {
             metadata: {
@@ -36,13 +37,6 @@ module.exports = {
                 highWaterMark: 1 << 25,
                 dlChunkSize: 0
             }
-            // async onBeforeCreateStream(track, source, _queue) {
-            //     if (track.playlist?.source === "spotify") {
-            //         const searched = await playdl.search(`${track.title}`, { limit : 1 })
-            //         return (await playdl.stream(searched[0].url)).stream
-            //     }
-            //     return (await playdl.stream(track.url)).stream
-            // }
         })
 
         try {
@@ -52,15 +46,23 @@ module.exports = {
             return await interaction.reply({ content: "Could not join your voice channel!", ephemeral: true })
         }
 
-        await interaction.deferReply()
+        if (interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
         const searchResult = await player.search(query, {
             requestedBy: interaction.user
         }).catch(() => {})
 
-        if (!searchResult || !searchResult.tracks.length) return await interaction.followUp({content: '> No results were found!'})
+        const not_found = '> No results were found!'
 
+        if (!searchResult || !searchResult.tracks.length) 
+            return interaction.type === `APPLICATION_COMMAND` ? 
+                await interaction.followUp({content: not_found }) : 
+                await interaction.reply({ content: not_found })
 
-        await interaction.followUp({ content: `⏱ | Loading your ${searchResult.playlist ? 'playlist' : 'track'}...`, })
+        const result = `⏱ | Loading your ${searchResult.playlist ? 'playlist' : 'track'}...`
+
+        interaction.type === `APPLICATION_COMMAND` ? 
+        await interaction.followUp({ content: result }) :
+        await interaction.reply({ content: result })
 
         searchResult.playlist ? queue.addTracks(searchResult.tracks) : queue.addTrack(searchResult.tracks[0])
         if (!queue.playing) await queue.play()
