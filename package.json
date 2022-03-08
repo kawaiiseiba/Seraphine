@@ -15,10 +15,9 @@
     "discord.js": "^13.6.0",
     "dotenv": "^10.0.0",
     "ffmpeg": "0.0.4",
-    "fluent-ffmpeg": "^2.1.2",
     "fs": "^0.0.1-security",
     "mongoose": "^6.0.14",
     "play-dl": "^1.4.4",
-    "ytdl-core": "^4.9.2"
+    "ytdl-core": "^4.11.0"
   }
 }

@@ -51,7 +51,7 @@ module.exports = {
         await interaction.deferReply()
 
         const queue = player.getQueue(interaction.guildId)
-        if (!queue || !queue.playing) {
+        if (!queue || !queue.connection) {
             return void interaction.followUp({content: '❌ | No music is being played!'})
         }
 

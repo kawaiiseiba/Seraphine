@@ -32,7 +32,7 @@ module.exports = {
         await interaction.deferReply()
 
         const queue = player.getQueue(interaction.guildId)
-        if (!queue || !queue.playing) return void interaction.followUp({ content: '❌ | No music is being played!' })
+        if (!queue || !queue.connection) return void interaction.followUp({ content: '❌ | No music is being played!' })
         
         const trackIndex = interaction.options.getInteger('tracks') - 1
         if (trackIndex > queue.tracks.length) return void interaction.followUp({ content: '❌ | Track number greater than queue depth!' })

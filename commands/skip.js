@@ -23,7 +23,7 @@ module.exports = {
     
         await interaction.deferReply()
         const queue = player.getQueue(interaction.guildId)
-        if (!queue || !queue.playing) return await interaction.followUp({content: '❌ | No music is being played!'})
+        if (!queue || !queue.connection) return await interaction.followUp({content: '❌ | No music is being played!'})
 
         const currentTrack = queue.current
         const success = queue.skip()
