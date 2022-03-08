@@ -3,6 +3,7 @@ const {Client, Collection, Intents} = require('discord.js');
 module.exports = class extends Client {
   constructor(config) {
     super({
+        partials: ["CHANNEL"],
         intents: [
             Intents.FLAGS.GUILDS, 
             Intents.FLAGS.GUILD_MEMBERS,
@@ -16,7 +17,7 @@ module.exports = class extends Client {
             Intents.FLAGS.GUILD_MESSAGES,
             // Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
             // Intents.FLAGS.GUILD_MESSAGE_TYPING,
-            // Intents.FLAGS.DIRECT_MESSAGES,
+            Intents.FLAGS.DIRECT_MESSAGES,
             // Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
             // Intents.FLAGS.DIRECT_MESSAGE_TYPING
           ] ,
