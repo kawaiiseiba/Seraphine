@@ -16,8 +16,6 @@ mongoose.connect(process.env.AkashicRecords, {
 
 const settings = require('./schemas/settings')
 
-const GAMES_VC = require('./schemas/games_voice')
-
 const db = mongoose.connection
 db.on('error', e => console.log({ message: e.message }))
 
@@ -30,7 +28,7 @@ for (const file of commandFiles) {
 
 const slashCommands = require('./modules/slash-commands')
 
-const { Player, QueueRepeatMode } = require("discord-player")
+const { Player } = require("discord-player")
 const player = new Player(luka)
 
 const resetStatusActivity = () => {
@@ -56,16 +54,18 @@ const getRandomIntInclusive = (min, max) => {
     max = Math.floor(max)
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
-  
+
+// Player Events
 player.on('error', (queue, error) => console.log(`[${queue.guild.name}] Error emitted from the queue: ${error.message}`))
-player.on('connectionError', (queue, error) => {console.log(`[${queue.guild.name}] Error emitted from the connection: ${error.message}`))
+player.on('connectionError', (queue, error) => console.log(`[${queue.guild.name}] Error emitted from the connection: ${error.message}`))
 player.on("trackStart", (queue, track) => {
-    if(queue.guild.id !== OfficialServer) return queue.guild.channels.cache.get('890153344956514335').send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!\n${track.url}`)
-    queue.metadata.channel.send(`🎶 | Now playing **${track.title}** in **${queue.connection.channel.name}**!`)
+    queue.guild.id === OfficialServer ? 
+        queue.guild.channels.cache.get('890153344956514335').send(`**Playing** 🎶 \`${track.title}\` - Now  in 🔈**${queue.connection.channel.name}**!\n${track.url}`) : 
+        queue.metadata.channel.send(`**Playing** 🎶 \`${track.title}\` - Now in **${queue.connection.channel.name}**!`)
 })
-player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | Track **${track.title}** queued!`))
-player.on('botDisconnect', queue => queue.metadata.channel.send('❌ | **I was manually disconnected from the voice channel, clearing queue!**'))
-player.on('channelEmpty', queue => queue.metadata.channel.send('❌ | Nobody is in the voice channel, leaving...'))
+player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | **Track** \`${track.title}\` - Queued!`))
+player.on('botDisconnect', queue => queue.metadata.channel.send(`❌ | **I was manually disconnected from 🔈**${queue.connection.channel.name}**, clearing queue!**`))
+player.on('channelEmpty', queue => queue.metadata.channel.send(`❌ | Nobody is in 🔈**${queue.connection.channel.name}**, leaving...`))
 player.on('queueEnd', queue => queue.metadata.channel.send('✅ | **Queue finished!**'))
 
 luka.on('interactionCreate', async interaction => {
@@ -95,32 +95,39 @@ luka.on('interactionCreate', async interaction => {
 })
 
 luka.on('messageCreate', async msg => {
-    if(msg.author.bot) return
-    if(msg.channel.type == 'DM') return await msg.reply({ content: `⚠️ **Command cannot be used in private messages**`})
-
-    const application_settings = (await settings.find()).find(data => data.application_id === luka.user.id)
-
-    if(!application_settings) return await msg.reply({
-        content: `There's something wrong within our servers, please wait for a while and try again.`
-    })
-
-    const default_prefix = application_settings.server_prefix.find(data => data.guild_id === msg.guild.id) ? 
-        (application_settings.server_prefix.find(data => data.guild_id === msg.guild.id)).prefix : 
-        application_settings.default_prefix
-
-    if(!msg.content.startsWith(default_prefix)) return
-
-    const content = msg.content
-    const pos_command = content.substring(0, content.indexOf(' '))
-
-    if(!pos_command) return
-    if(application_settings.isMaintenance.isExist) return await interaction.reply({
-        content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
-    })
-
-    const command = luka.commands.get(pos_command.substring(1))
-
-    command.execute(msg, player, luka)
+    try{
+        if(msg.author.bot) return
+        if(msg.channel.type == 'DM') return await msg.reply({ content: `⚠️ **Command cannot be used in private messages**`})
+    
+        const application_settings = (await settings.find()).find(data => data.application_id === luka.user.id)
+    
+        if(!application_settings) return await msg.reply({
+            content: `There's something wrong within our servers, please wait for a while and try again.`
+        })
+    
+        const default_prefix = application_settings.server_prefix.find(data => data.guild_id === msg.guild.id) ? 
+            (application_settings.server_prefix.find(data => data.guild_id === msg.guild.id)).prefix : 
+            application_settings.default_prefix
+    
+        if(!msg.content.startsWith(default_prefix)) return
+    
+        const content = msg.content
+        const pos_command = content.substring(0, content.indexOf(' '))
+    
+        if(!pos_command) return
+        if(application_settings.isMaintenance.isExist) return await interaction.reply({
+            content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
+        })
+    
+        const command = luka.commands.get(pos_command.substring(1))
+    
+        if(!command) return
+        command.execute(msg, player, luka)
+    } catch(e) {
+        msg.reply({
+            content: 'There was an error trying to execute that command: ' + e.message,
+        })
+    }
 })
 
 luka.once('ready', async () => {

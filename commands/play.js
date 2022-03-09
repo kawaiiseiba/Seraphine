@@ -13,24 +13,21 @@ module.exports = {
         }
     ],
     async execute(interaction, player, luka) {
-
         const query = interaction.type === `APPLICATION_COMMAND` ? 
             interaction.options.getString('search') : 
             interaction.content.substring(interaction.content.indexOf(' ') + 1)
 
         const vc = interaction.member.voice
 
-        if(!vc.channelId) return await interaction.reply({ content: `${interaction.user.toString()} You need to be in a voice channel to play music!`, ephemeral: true })
-        if (
-            interaction.guild.me.voice.channelId &&
-            interaction.member.voice.channelId !== interaction.guild.me.voice.channelId
-        ) return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true, })
+        if(!vc.channelId) return await interaction.reply({ content: `${(interaction.type === `APPLICATION_COMMAND` ? interaction.user : interaction.author).toString()} You need to be in a voice channel to play music!`, ephemeral: true })
+        if (interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId) 
+            return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true, })
 
         const queue = player.createQueue(interaction.guild, {
             metadata: {
                 channel: interaction.channel
             },
-            leaveOnEmptyCooldown: 30000,
+            // leaveOnEmptyCooldown: 30000,
             ytdlOptions: {
                 quality: 'highest',
                 filter: 'audioonly',
@@ -48,7 +45,7 @@ module.exports = {
 
         if (interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
         const searchResult = await player.search(query, {
-            requestedBy: interaction.user
+            requestedBy: interaction.type === `APPLICATION_COMMAND` ? interaction.user : interaction.author
         }).catch(() => {})
 
         const not_found = '> No results were found!'
@@ -58,7 +55,7 @@ module.exports = {
                 await interaction.followUp({content: not_found }) : 
                 await interaction.reply({ content: not_found })
 
-        const result = `⏱ | Loading your ${searchResult.playlist ? 'playlist' : 'track'}...`
+        const result = `🔎 | **Searching ${searchResult.playlist ? 'playlist' : 'track'}...**`
 
         interaction.type === `APPLICATION_COMMAND` ? 
             await interaction.followUp({ content: result }) :
