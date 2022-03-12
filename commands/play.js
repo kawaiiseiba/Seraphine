@@ -1,22 +1,22 @@
-const playdl = require('play-dl')
-
 module.exports = {
     name: 'play',
-    description: 'Play Youtube/Spotify music',
+    description: 'Play Youtube/Spotify music.',
     type: 1,
     options: [
         {
             name: 'search',
-            description: 'Search through youtube or use youtube/spotify links or playlist links',
+            description: 'The song or playlist you want to play.',
             type: 3,
             required: true
         }
     ],
-    async execute(interaction, player, luka) {
+    async execute(interaction, player, luka, args) {
         try{
             const query = interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.options.getString('search') : 
-                interaction.content.substring(interaction.content.indexOf(' ') + 1)
+                interaction.content.substring(0, interaction.content.indexOf(' ')) ? interaction.content.substring(interaction.content.indexOf(' ') + 1) : false
+            
+            if(!query) return
     
             const vc = interaction.member.voice
     
@@ -34,7 +34,8 @@ module.exports = {
                     filter: 'audioonly',
                     highWaterMark: 1 << 25,
                     dlChunkSize: 0
-                }
+                },
+                initialVolume: 50
             })
     
             try {
@@ -48,18 +49,15 @@ module.exports = {
             const searchResult = await player.search(query, {
                 requestedBy: interaction.type === `APPLICATION_COMMAND` ? interaction.user : interaction.author
             }).catch(() => {})
-
-            console.log(searchResult)
     
             const not_found = '> No results were found!'
     
-            if (!searchResult || !searchResult.tracks.length) 
-                return interaction.type === `APPLICATION_COMMAND` ? 
-                    await interaction.followUp({content: not_found }) : 
-                    await interaction.reply({ content: not_found })
-    
+            if (!searchResult || !searchResult.tracks.length)return interaction.type === `APPLICATION_COMMAND` ? 
+                await interaction.followUp({content: not_found }) : 
+                await interaction.reply({ content: not_found })
+
             const result = `🔎 | **Searching ${searchResult.playlist ? 'playlist' : 'track'}...**`
-    
+
             interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({ content: result }) :
                 await interaction.reply({ content: result })
@@ -67,10 +65,12 @@ module.exports = {
             searchResult.playlist ? queue.addTracks(searchResult.tracks) : queue.addTrack(searchResult.tracks[0])
             if (!queue.playing) await queue.play()
         } catch (e){
-            console.log(e);
+            console.log(e)
             interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
+        
+            args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
         }
     }
 }

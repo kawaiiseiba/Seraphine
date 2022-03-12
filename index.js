@@ -2,11 +2,13 @@ require('dotenv').config()
 const fs = require('fs')
 const Discord = require('discord.js')
 const Client = require('./client/Client')
+const handlers = require('./handlers/handlers')
 
 const luka = new Client()
 luka.commands = new Discord.Collection()
 
-const OfficialServer = process.env.OfficialServer
+const [ OfficialServer, InteractionLogs, ErrorLogs, GuildJoined, GuildLeave, GuildCount ] = 
+    [ process.env.OfficialServer, process.env.InteractionLogs, process.env.ErrorLogs, process.env.GuildJoined, process.env.GuildLeave, process.env.GuildCount ]
 
 const mongoose = require('mongoose')
 mongoose.connect(process.env.AkashicRecords, { 
@@ -37,10 +39,10 @@ const resetStatusActivity = () => {
             name: `your requests 🎶`,
             type: 'LISTENING',
         },
-        { 
-            name: `for donations. 🎶`,
-            type: 'WATCHING',
-        },
+        // { 
+        //     name: `for donations. 🎶`,
+        //     type: 'WATCHING',
+        // },
     ]
 
     luka.user.setPresence({ 
@@ -61,14 +63,18 @@ player.on('connectionError', (queue, error) => console.log(`[${queue.guild.name}
 player.on("trackStart", (queue, track) => {
     queue.guild.id === OfficialServer ? 
         queue.guild.channels.cache.get('890153344956514335').send(`**Playing** 🎶 \`${track.title}\` - Now  in 🔈**${queue.connection.channel.name}**!\n${track.url}`) : 
-        queue.metadata.channel.send(`**Playing** 🎶 \`${track.title}\` - Now in **${queue.connection.channel.name}**!`)
+        queue.metadata.channel.send(`**Playing** 🎶 \`${track.title}\` - Now in 🔈**${queue.connection.channel.name}**!`)
 })
 player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | **Track** \`${track.title}\` - Queued!`))
-player.on('botDisconnect', queue => queue.metadata.channel.send(`❌ | **I was manually disconnected from 🔈**${queue.connection.channel.name}**, clearing queue!**`))
+player.on('botDisconnect', queue => queue.metadata.channel.send(`❌ | I was manually disconnected from **🔈${queue.connection.channel.name}**, clearing queue!`))
 player.on('channelEmpty', queue => queue.metadata.channel.send(`❌ | Nobody is in 🔈**${queue.connection.channel.name}**, leaving...`))
 player.on('queueEnd', queue => queue.metadata.channel.send('✅ | **Queue finished!**'))
 
 luka.on('interactionCreate', async interaction => {
+    const altria = luka.guilds.cache.get(OfficialServer)
+    const interaction_logs = altria.channels.cache.get(InteractionLogs)
+    const error_logs = altria.channels.cache.get(ErrorLogs)
+
     try{
         if(!interaction.inGuild()) return await interaction.reply({ content: `⚠️ **This command cannot be used in private messages**`})
         if(!interaction.isCommand()) return
@@ -84,50 +90,88 @@ luka.on('interactionCreate', async interaction => {
         })
 
         const command = luka.commands.get(interaction.commandName)
-        command.execute(interaction, player, luka)    
+
+        if(!interaction.member.roles.cache.some(role => role.name === 'DJ') || (!interaction.member.permissions.has('ADMINISTRATOR') || !interaction.member.permissions.has('MANAGE_CHANNEL') || !interaction.member.permissions.has('MANAGE_SERVER')))
+            return interaction.reply({ 
+                content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_SERVER\` permission or \`@DJ\` named role can use this command!**\n**Use \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to give \`@DJ\` role to mentioned users.`
+            })
+        
+        command.execute(interaction, player, luka, { error_logs: error_logs, handlers: handlers })    
+        interaction_logs.send({ embeds: handlers.interactionLogs(interaction).embeds })
 
     } catch(e) {
-        console.log(e);
-        interaction.followUp({
-            content: 'There was an error trying to execute that command: ' + e.message,
-        })
+        error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
     }
 })
 
-luka.on('messageCreate', async msg => {
+luka.on('messageCreate', async interaction => {
+    const altria = luka.guilds.cache.get(OfficialServer)
+    const interaction_logs = altria.channels.cache.get(InteractionLogs)
+    const error_logs = altria.channels.cache.get(ErrorLogs)
+
     try{
-        if(msg.author.bot) return
-        if(msg.channel.type == 'DM') return await msg.reply({ content: `⚠️ **Command cannot be used in private messages**`})
+        if(interaction.author.bot) return
+        if(interaction.channel.type == 'DM') return await interaction.reply({ content: `⚠️ **Commands cannot be used in private messages**`})
     
         const application_settings = (await settings.find()).find(data => data.application_id === luka.user.id)
     
-        if(!application_settings) return await msg.reply({
+        if(!application_settings) return await interaction.reply({
             content: `There's something wrong within our servers, please wait for a while and try again.`
         })
     
-        const default_prefix = application_settings.server_prefix.find(data => data.guild_id === msg.guild.id) ? 
-            (application_settings.server_prefix.find(data => data.guild_id === msg.guild.id)).prefix : 
+        const default_prefix = application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id) ? 
+            (application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id)).prefix : 
             application_settings.default_prefix
     
-        if(!msg.content.startsWith(default_prefix)) return
+        if(!interaction.content.startsWith(default_prefix)) return
     
-        const content = msg.content
-        const pos_command = content.substring(0, content.indexOf(' '))
-    
-        if(!pos_command) return
+        const content = interaction.content
+        const pos_command = content.substring(0, content.indexOf(' ')) ?
+            content.substring(0, content.indexOf(' ')) : 
+            content.substring(content.indexOf(' ') + 1)
+
         if(application_settings.isMaintenance.isExist) return await interaction.reply({
             content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
         })
     
-        const command = luka.commands.get(pos_command.substring(1))
-    
+        const command = luka.commands.get((pos_command.substring(1)).toLowerCase())
+
         if(!command) return
-        command.execute(msg, player, luka)
+        
+        const hasPerms = (interaction.member.permissions.has('ADMINISTRATOR') || interaction.member.permissions.has('MANAGE_CHANNEL') || interaction.member.permissions.has('MANAGE_SERVER'))
+        if((command.name !== `prefix` || command.name !== `dj`) && (!interaction.member.roles.cache.some(role => role.name === 'DJ') && !hasPerms))
+            return interaction.reply({ 
+                content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_SERVER\` permission or \`@DJ\` named role can use this command!**\n**Use \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to give \`@DJ\` role to mentioned users.`
+            })
+        command.execute(interaction, player, luka, { error_logs: error_logs, handlers: handlers })
+
+        // interaction_logs.send({ embeds: handlers.interactionLogs(interaction).embeds })
     } catch(e) {
-        msg.reply({
-            content: 'There was an error trying to execute that command: ' + e.message,
-        })
+        console.log(e)
+        error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
     }
+})
+
+luka.on('guildCreate', async guild => {
+    const owner = luka.users.cache.get(guild.ownerId)
+
+    const altria = luka.guilds.cache.get(OfficialServer)
+    const guild_logs = altria.channels.cache.get(GuildJoined)
+    const guild_count = luka.guilds.cache.size
+    const guild_count_vc = altria.channels.cache.get(GuildCount)
+
+    await guild_logs.send({ embeds: handlers.guildJoined(luka, guild, owner).embeds })
+    await guild_count_vc.setName(`Guilds Joined: ${guild_count.toLocaleString()}`)
+})
+
+luka.on('guildDelete', async guild => {
+    const altria = melty.guilds.cache.get(OfficialServer)
+    const guild_logs = altria.channels.cache.get(GuildJoined)
+    const guild_count = melty.guilds.cache.size
+    const guild_count_vc = altria.channels.cache.get(GuildCount)
+
+    await guild_logs.send({ content: `**${luka.user.username}** leaves **${guild.name}** server @ <t:${Math.floor(Date.now() / 1000)}:F>` })
+    await guild_count_vc.setName(`Guilds Joined: ${guild_count.toLocaleString()}`)
 })
 
 luka.once('ready', async () => {
@@ -153,6 +197,12 @@ luka.once('ready', async () => {
     // await slashCommands(luka)
     const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
     console.log(`Seraphine went online~\nDate: ${datenow}`)
+    const altria = luka.guilds.cache.get(OfficialServer)
+    
+    const guild_count = luka.guilds.cache.size
+    const guild_count_vc = altria.channels.resolve(GuildCount)
+
+    guild_count_vc.setName(`Guilds Joined: ${guild_count.toLocaleString()}`)
 })
 
 luka.login(process.env.Seraphine)
