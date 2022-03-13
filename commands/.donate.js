@@ -36,6 +36,16 @@ module.exports = {
                         style: 1,
                         custom_id: "donate",
                         disabled: false
+                    },
+                    {
+                        type: 2,
+                        label: "Join our Support Server",
+                        emoji: {
+                            name: `invite`,
+                            id: `658538493949116428`
+                        },
+                        style: 5,
+                        url: `https://discord.gg/GFnCHrTE`
                     }
                 ]
             }

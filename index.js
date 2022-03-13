@@ -183,17 +183,14 @@ luka.on('guildDelete', async guild => {
 //     invites.get(invite.guild.id).set(invite.code, invite.uses);
 // })
 
-luka.on("guildMemberAdd", member => {
+luka.on("guildMemberAdd", async member => {
     // To compare, we need to load the current invite list.
-    const invite = member.guild.invites.cache.get(`8Dq3CZpCYw`)
-    const support_invites = invites.get(`937287897797763072`)   
+    const invite = (await member.guild.invites.fetch()).find(i => i.code === `8Dq3CZpCYw`)
+    const support_invites = invites.get(`937287897797763072`)  
 
-    console.log(invite.uses)
-    console.log(support_invites)
+    if(!support_invites.get(invite.code)) return console.log(`Needs attention`)
 
-    
-
-    invite.uses > support_invites ? console.log(`this is it`) : console.log(`different`)
+    invite.uses > support_invites.get(invite.code) ? console.log(`this is it`) : console.log(`different`)
 })
 
 luka.once('ready', async () => {

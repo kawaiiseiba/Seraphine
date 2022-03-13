@@ -25,6 +25,22 @@ module.exports = {
             const default_prefix = application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id) ? 
                 (application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id)).prefix : 
                 application_settings.default_prefix
+            
+            const components = {
+                type: 1,
+                components: [
+                    {
+                        type: 2,
+                        label: "Join our Support Server",
+                        emoji: {
+                            name: `invite`,
+                            id: `658538493949116428`
+                        },
+                        style: 5,
+                        url: `https://discord.gg/GFnCHrTE`
+                    }
+                ]
+            }
 
             const embed = {
                 title: `${luka.user.username} 🎶 | Commands`,
@@ -32,7 +48,10 @@ module.exports = {
                 thumbnail: {
                     url: luka.user.displayAvatarURL({ dynamic: true })
                 },
-                description: `Supports __**Chat Commands**__ and __**Slash Commands**__ (NEW!)\n\n**Chat command**: \`${default_prefix}\` Example: \`${default_prefix}play <search>\`\n**Slash command**: \`/\` Example: \`/play <search>\`\n\n${commands.join('\n\n')}`
+                description: `Supports __**Chat Commands**__ and __**Slash Commands**__ (NEW!)\n\n**Chat command**: \`${default_prefix}\` Example: \`${default_prefix}play <search>\`\n**Slash command**: \`/\` Example: \`/play <search>\`\n\n${commands.join('\n\n')}`,
+                footer:{
+                    text: `Need more help? Join our support server.`
+                }
             }
 
             return interaction.type === `APPLICATION_COMMAND` ? 
