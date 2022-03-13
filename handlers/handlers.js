@@ -43,7 +43,7 @@ module.exports = {
 
         const interactionUsed = interaction.type === `DEFAULT` ? 
             `**Chat Command** \`\`\`${interaction.content}\`\`\`` : interaction.type === 'APPLICATION_COMMAND' ? 
-            `**Slash Command** \`\`\`/${interaction.commandName} ${interaction.options.getSubcommand()} ${hasOptions.join(' ')}\`\`\`` : interaction.isButton() ? 
+            `**Slash Command** \`\`\`/${interaction.commandName} ${hasOptions.join(' ')}\`\`\`` : interaction.isButton() ? 
             `**Button Component** \`\`\`${interaction.customId}\`\`\`` : 
             `**Select Menu** \`\`\`${interaction.customId}\`\`\``
 
@@ -140,7 +140,7 @@ function isComponent(interaction){
     ] : [
         {
             name: `Slash Command`,
-            value: `\`\`\`/${interaction.commandName} ${interaction.options.getSubcommand()} ${hasOptions.join(' ')}\`\`\``,
+            value: `\`\`\`/${interaction.commandName} ${hasOptions.join(' ')}\`\`\``,
             inline: true
         },
         {

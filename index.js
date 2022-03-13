@@ -29,6 +29,7 @@ for (const file of commandFiles) {
 }
 
 const slashCommands = require('./modules/slash-commands')
+const invites = new Map()
 
 const { Player } = require("discord-player")
 const player = new Player(luka)
@@ -47,7 +48,7 @@ const resetStatusActivity = () => {
 
     luka.user.setPresence({ 
         activities: [ status[getRandomIntInclusive(0, status.length-1)] ],
-        status: 'online'
+        status: 'invisible'
     })
 }
 
@@ -174,6 +175,27 @@ luka.on('guildDelete', async guild => {
     await guild_count_vc.setName(`Guilds Joined: ${guild_count.toLocaleString()}`)
 })
 
+// luka.on("inviteDelete", (invite) => {
+//     invites.get(invite.guild.id).delete(invite.code);
+// })
+  
+// luka.on("inviteCreate", (invite) => {
+//     invites.get(invite.guild.id).set(invite.code, invite.uses);
+// })
+
+luka.on("guildMemberAdd", member => {
+    // To compare, we need to load the current invite list.
+    const invite = member.guild.invites.cache.get(`8Dq3CZpCYw`)
+    const support_invites = invites.get(`937287897797763072`)   
+
+    console.log(invite.uses)
+    console.log(support_invites)
+
+    
+
+    invite.uses > support_invites ? console.log(`this is it`) : console.log(`different`)
+})
+
 luka.once('ready', async () => {
   resetStatusActivity()
 
@@ -197,6 +219,11 @@ luka.once('ready', async () => {
     // await slashCommands(luka)
     const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
     console.log(`Seraphine went online~\nDate: ${datenow}`)
+
+    const fetch_invites = new Map((await luka.guilds.cache.get(`937287897797763072`).invites.fetch()).map(invite => [invite.code, invite.uses]))
+
+    invites.set(`937287897797763072`, fetch_invites)
+
     const altria = luka.guilds.cache.get(OfficialServer)
     
     const guild_count = luka.guilds.cache.size

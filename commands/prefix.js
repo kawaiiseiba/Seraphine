@@ -2,7 +2,7 @@ const settings = require('../schemas/settings')
 
 module.exports = {
     name: 'prefix',
-    description: 'Set default command prefix.',
+    description: 'Change command prefix.',
     options: [
         {
             name: 'set',
@@ -28,7 +28,7 @@ module.exports = {
                 (application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id)).prefix : 
                 application_settings.default_prefix
 
-            if(!prefix) return void await interaction.reply({ content: `⚙️ | The server prefix is \`${default_prefix}\``, ephemeral: true  })
+            if(!prefix) return void await interaction.reply({ content: `⚙️ | This server prefix is \`${default_prefix}\`, Example: \`${default_prefix}play\``, ephemeral: true  })
             if(prefix.length === 1 && prefix === `/`) return void await interaction.reply({ content: `❌ | This prefix is already available in slash commands!`, ephemeral: true  })
             if(prefix.length > 2) return void await interaction.reply({ content: `❌ | A maximum of 2 character length only!`, ephemeral: true })
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()

@@ -10,6 +10,7 @@ module.exports = class extends Client {
             Intents.FLAGS.GUILD_BANS, 
             Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS, 
             Intents.FLAGS.GUILD_INTEGRATIONS,
+            Intents.FLAGS.GUILD_INVITES,
             Intents.FLAGS.GUILD_WEBHOOKS,
             Intents.FLAGS.GUILD_INVITES,
             Intents.FLAGS.GUILD_VOICE_STATES,

@@ -3,6 +3,14 @@ module.exports = {
     name: 'remove',
     description: 'Remove a specific track.',
     type: 1,
+    options: [
+        {
+            name: 'track',
+            description: 'The position of the track in the queue',
+            type: 4,
+            required: true
+        }
+    ],
     async execute(interaction, player, luka, args) {
         try{
             if (!interaction.member.voice.channel) return void interaction.reply({ content: 'You are not in a voice channel!', ephemeral: true })
