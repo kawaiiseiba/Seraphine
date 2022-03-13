@@ -8,7 +8,7 @@ module.exports = {
             name: 'user',
             type: 6,
             description: 'User to assign @DJ role.',
-            required: false
+            required: true
         }
     ],
     async execute(interaction, player, luka, args) {

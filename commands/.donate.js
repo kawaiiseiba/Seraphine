@@ -1,7 +1,6 @@
 module.exports = {
     name: 'donate',
     description: 'Keeps the server running.',
-    type: 1,
     async execute(interaction, player, luka, args) {
         try{
             const author = luka.users.cache.get('851062978416869377')

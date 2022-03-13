@@ -3,10 +3,24 @@ const { languages } = translate = require('@imlinhanchao/google-translate-api')
 
 module.exports = {
     name: 'lyrics',
-    description: 'Searches the lyrics of the current playing song.',
+    description: 'Searches the lyrics of the current song or by song title or artist',
+    options: [
+        {
+            name: 'title',
+            description: 'The title of the song',
+            type: 3
+        },
+        {
+            name: 'artist',
+            description: 'The title of the song',
+            type: 3
+        }
+    ],
     type: 1,
     async execute(interaction, player, luka, args) {
         try{
+            const isDefault = (!interaction.options && !interaction.content.substring(0, interaction.content.indexOf(' ')))
+            console.log(isDefault)
             if (!interaction.member.voice.channel) return await interaction.reply({ content: 'You are not in a voice channel!', ephemeral: true })
             if (interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId)
                 return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true })
@@ -14,11 +28,25 @@ module.exports = {
 
             const queue = player.getQueue(interaction.guildId)
     
-            if (!queue || !queue.connection) return interaction.type === `APPLICATION_COMMAND` ? 
+            if (!queue || !queue.playing) return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({content: '❌ | No music is being played!'}) :
                 await interaction.reply({content: '❌ | No music is being played!'})
     
-            let { title, author } = queue.current
+            let { title, author } = interaction.type === `APPLICATION_COMMAND` ? 
+                { 
+                    title: interaction.options.getString('search') ? interaction.options.getString('search') : ``,
+                    author: interaction.options.getString('author') ? interaction.options.getString('author') : ``,
+                } :
+                interaction.content.substring(0, interaction.content.indexOf(' ')) ? 
+                {
+                    title: interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[0],
+                    author: interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[1] ? 
+                        interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[0] : `` 
+                }
+                : queue.current
+
+            console.log(title)
+            console.log(artist)
 
             const lyrics = await lyricsFinder(author, title) 
                 ? await lyricsFinder(author, title) 
@@ -38,29 +66,35 @@ module.exports = {
                 }) : lyrics
 
             const raw = await Promise.all(data)
+
+            let str = ``
             
-            const result = raw.reduce((result, v, i) => {
-                const chunkIndex = Math.floor([...result[]]/10)
+            const split_lyrics = raw.reduce((result, v, i) => {
+                str += v
+                const index = Math.floor(str.length/3500)
               
-                if(!resultArray[chunkIndex]) {
-                    resultArray[chunkIndex] = [] // start a new chunk
+                if(!result[index]) {
+                    result[index] = [] // start a new chunk
                 }
               
-                resultArray[chunkIndex].push(item)
-              
-                return resultArray
-                if(!result[i]) result[i] = []
-
-                const index = result[i].join(' ').length >= 4000 ? i+1 : i
-
-                if(result[i].join(' ').length >= 4000) {
-                    result[index] = []
-                }
-
                 result[index].push(v)
-
+              
                 return result
             }, [])
+
+            console.log(split_lyrics)
+
+            return void split_lyrics.map(async (v,i) => {
+                const result = v.join('\n')
+
+                if(i < 1) return void interaction.type === `APPLICATION_COMMAND` 
+                    ? await interaction.followUp({ content: `>>> **${title}**\n\n${result}` }) 
+                    : await interaction.reply({ content: `>>> **${title}**\n\n${result}` })
+
+                return void interaction.type === `APPLICATION_COMMAND` 
+                    ? await interaction.followUp({ content: `>>> ${result}` }) 
+                    : await interaction.channel.send({ content: `>>> ${result}` })
+            })
 
             return console.log(result)
             

@@ -4,7 +4,6 @@ const settings = require('../schemas/settings')
 module.exports = {
     name: 'help',
     description: 'Shows information about available commands.',
-    type: 1,
     async execute(interaction, player, luka, args) {
         try{
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()

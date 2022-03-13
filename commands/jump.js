@@ -1,6 +1,5 @@
 module.exports = {
     name: 'jump',
-    type: 1,
     description: 'Jump to a specific track.',
     options: [
         {

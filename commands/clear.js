@@ -1,7 +1,6 @@
 module.exports = {
     name: 'clear',
     description: 'Clear the current queue.',
-    type: 1,
     async execute(interaction, player, luka, args) {
         try{
             if (!interaction.member.voice.channel) return void interaction.reply({ content: 'You are not in a voice channel!', ephemeral: true, })

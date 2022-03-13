@@ -138,12 +138,14 @@ luka.on('messageCreate', async interaction => {
 
         if(!command) return
 
-        const isAlone = (interaction.member.voice.channel.members.filter(m => !m.user.bot).size) <= 1
+        const isConnected = interaction.member.voice.channel ? interaction.member.voice.channel.members.filter(m => !m.user.bot) : false
         const unrestricted = [`play`, `lyrics`, `donate`, `help`, `nowplaying`, `queue`].find(cmd => cmd === command.name)
         const hasDJ = interaction.member.roles.cache.some(role => role.name === 'DJ')
         const hasPerms = (interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_ROLES))
 
-        if(!isAlone && (!unrestricted || (!hasDJ && !hasPerms)))
+        console.log(isConnected && !(isConnected.size <= 1))
+        console.log(!unrestricted || (!hasDJ && !hasPerms))
+        if((isConnected && !(isConnected.size <= 1)) && (!unrestricted || (!hasDJ && !hasPerms)))
             return interaction.reply({ 
                 content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_ROLES\` permissions or with \`@DJ\` named role can use this command freely!\nBeing alone with **${luka.user.username}** works too!\nUse \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to assign \`@DJ\` role to mentioned users.`
             })
