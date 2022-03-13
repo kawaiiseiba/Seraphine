@@ -11,11 +11,14 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.5.3",
+    "@imlinhanchao/google-translate-api": "^8.0.1",
     "discord-player": "^5.2.2",
     "discord.js": "^13.6.0",
     "dotenv": "^10.0.0",
     "ffmpeg": "0.0.4",
     "fs": "^0.0.1-security",
+    "genius-lyrics": "^4.3.5",
+    "lyrics-finder": "^21.7.0",
     "mongoose": "^6.0.14",
     "play-dl": "^1.4.4",
     "ytdl-core": "^4.11.0"

@@ -1,6 +1,6 @@
 require('dotenv').config()
 const fs = require('fs')
-const Discord = require('discord.js')
+const { Permissions } = Discord = require('discord.js')
 const Client = require('./client/Client')
 const handlers = require('./handlers/handlers')
 
@@ -29,7 +29,6 @@ for (const file of commandFiles) {
 }
 
 const slashCommands = require('./modules/slash-commands')
-const invites = new Map()
 
 const { Player } = require("discord-player")
 const player = new Player(luka)
@@ -48,7 +47,7 @@ const resetStatusActivity = () => {
 
     luka.user.setPresence({ 
         activities: [ status[getRandomIntInclusive(0, status.length-1)] ],
-        status: 'invisible'
+        status: 'online'
     })
 }
 
@@ -63,12 +62,12 @@ player.on('error', (queue, error) => console.log(`[${queue.guild.name}] Error em
 player.on('connectionError', (queue, error) => console.log(`[${queue.guild.name}] Error emitted from the connection: ${error.message}`))
 player.on("trackStart", (queue, track) => {
     queue.guild.id === OfficialServer ? 
-        queue.guild.channels.cache.get('890153344956514335').send(`**Playing** 🎶 \`${track.title}\` - Now  in 🔈**${queue.connection.channel.name}**!\n${track.url}`) : 
-        queue.metadata.channel.send(`**Playing** 🎶 \`${track.title}\` - Now in 🔈**${queue.connection.channel.name}**!`)
+        queue.guild.channels.cache.get('890153344956514335').send(`**Playing** 🎶 \`${track.title}\` - Now  in 🔉**${queue.connection.channel.name}**!\n${track.url}`) : 
+        queue.metadata.channel.send(`**Playing** 🎶 \`${track.title}\` - Now in 🔉**${queue.connection.channel.name}**!`)
 })
 player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | **Track** \`${track.title}\` - Queued!`))
-player.on('botDisconnect', queue => queue.metadata.channel.send(`❌ | I was manually disconnected from **🔈${queue.connection.channel.name}**, clearing queue!`))
-player.on('channelEmpty', queue => queue.metadata.channel.send(`❌ | Nobody is in 🔈**${queue.connection.channel.name}**, leaving...`))
+player.on('botDisconnect', queue => queue.metadata.channel.send(`❌ | I was manually disconnected from 🔉**${queue.connection.channel.name}**, clearing queue!`))
+player.on('channelEmpty', queue => queue.metadata.channel.send(`❌ | Nobody is in 🔉**${queue.connection.channel.name}**, leaving...`))
 player.on('queueEnd', queue => queue.metadata.channel.send('✅ | **Queue finished!**'))
 
 luka.on('interactionCreate', async interaction => {
@@ -138,11 +137,15 @@ luka.on('messageCreate', async interaction => {
         const command = luka.commands.get((pos_command.substring(1)).toLowerCase())
 
         if(!command) return
-        
-        const hasPerms = (interaction.member.permissions.has('ADMINISTRATOR') || interaction.member.permissions.has('MANAGE_CHANNEL') || interaction.member.permissions.has('MANAGE_SERVER'))
-        if((command.name !== `prefix` || command.name !== `dj`) && (!interaction.member.roles.cache.some(role => role.name === 'DJ') && !hasPerms))
+
+        const isAlone = (interaction.member.voice.channel.members.filter(m => !m.user.bot).size) <= 1
+        const unrestricted = [`play`, `lyrics`, `donate`, `help`, `nowplaying`, `queue`].find(cmd => cmd === command.name)
+        const hasDJ = interaction.member.roles.cache.some(role => role.name === 'DJ')
+        const hasPerms = (interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_ROLES))
+
+        if(!isAlone && (!unrestricted || (!hasDJ && !hasPerms)))
             return interaction.reply({ 
-                content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_SERVER\` permission or \`@DJ\` named role can use this command!**\n**Use \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to give \`@DJ\` role to mentioned users.`
+                content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_ROLES\` permissions or with \`@DJ\` named role can use this command freely!\nBeing alone with **${luka.user.username}** works too!\nUse \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to assign \`@DJ\` role to mentioned users.`
             })
         command.execute(interaction, player, luka, { error_logs: error_logs, handlers: handlers })
 
@@ -175,24 +178,6 @@ luka.on('guildDelete', async guild => {
     await guild_count_vc.setName(`Guilds Joined: ${guild_count.toLocaleString()}`)
 })
 
-// luka.on("inviteDelete", (invite) => {
-//     invites.get(invite.guild.id).delete(invite.code);
-// })
-  
-// luka.on("inviteCreate", (invite) => {
-//     invites.get(invite.guild.id).set(invite.code, invite.uses);
-// })
-
-luka.on("guildMemberAdd", async member => {
-    // To compare, we need to load the current invite list.
-    const invite = (await member.guild.invites.fetch()).find(i => i.code === `8Dq3CZpCYw`)
-    const support_invites = invites.get(`937287897797763072`)  
-
-    if(!support_invites.get(invite.code)) return console.log(`Needs attention`)
-
-    invite.uses > support_invites.get(invite.code) ? console.log(`this is it`) : console.log(`different`)
-})
-
 luka.once('ready', async () => {
   resetStatusActivity()
 
@@ -216,10 +201,6 @@ luka.once('ready', async () => {
     // await slashCommands(luka)
     const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
     console.log(`Seraphine went online~\nDate: ${datenow}`)
-
-    const fetch_invites = new Map((await luka.guilds.cache.get(`937287897797763072`).invites.fetch()).map(invite => [invite.code, invite.uses]))
-
-    invites.set(`937287897797763072`, fetch_invites)
 
     const altria = luka.guilds.cache.get(OfficialServer)
     
