@@ -13,8 +13,7 @@ const [ OfficialServer, InteractionLogs, ErrorLogs, GuildJoined, GuildLeave, Gui
 const mongoose = require('mongoose')
 mongoose.connect(process.env.AkashicRecords, { 
     useNewUrlParser: true, 
-    useUnifiedTopology: true,
-    useFindAndModify: false
+    useUnifiedTopology: true
 }).catch(console.log)
 
 const settings = require('./schemas/settings')
