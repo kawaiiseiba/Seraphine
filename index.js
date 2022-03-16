@@ -108,6 +108,10 @@ luka.on('interactionCreate', async interaction => {
             content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
         })
 
+        const default_prefix = application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id) ? 
+            (application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id)).prefix : 
+            application_settings.default_prefix
+
         const command = luka.commands.get(interaction.commandName)
         
         command.execute(interaction, player, luka, error_logs, default_prefix)    
