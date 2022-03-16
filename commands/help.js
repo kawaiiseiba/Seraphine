@@ -4,7 +4,7 @@ const settings = require('../schemas/settings')
 module.exports = {
     name: 'help',
     description: 'Shows information about available commands.',
-    async execute(interaction, player, luka, args) {
+    async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
             const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'))
@@ -61,7 +61,7 @@ module.exports = {
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
 
-            args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
+            error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
         }
     }
 }

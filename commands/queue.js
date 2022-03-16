@@ -2,16 +2,14 @@
 module.exports = {
     name: 'queue',
     description: 'Shows all currently enqueued songs.',
-    type: 1,
-    async execute(interaction, player, luka, args) {
+    async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
-            if (!interaction.member.voice.channel) return await interaction.reply({ content: 'You are not in a voice channel!', ephemeral: true })
+            if (!interaction.member.voice.channel) return await interaction.reply({ content: '❌ | You are not in a voice channel!', ephemeral: true })
             if (interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId)
-                return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true })
+                return await interaction.reply({ content: '❌ | You are not in my voice channel!', ephemeral: true })
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
     
             const queue = player.getQueue(interaction.guildId)
-    
             if (!queue || !queue.playing) 
                 return interaction.type === `APPLICATION_COMMAND` ? 
                     await interaction.followUp({content: '❌ | No music is being played!'}) :
@@ -135,7 +133,7 @@ module.exports = {
                             interaction.followUp({ content: 'There was an error trying to execute that interaction: ' + e.message, ephemeral: true }) :
                             interaction.reply({ content: 'There was an error trying to execute that interaction: ' + e.message })
             
-                        args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
+                        error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
                     }
                 })
     
@@ -173,7 +171,7 @@ module.exports = {
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
 
-            args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
+            error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
         }
     }
 }

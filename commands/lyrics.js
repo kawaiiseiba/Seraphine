@@ -16,19 +16,19 @@ module.exports = {
             type: 3
         }
     ],
-    type: 1,
-    async execute(interaction, player, luka, args) {
+    async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
             const isDefault = (!interaction.options && !interaction.content.substring(0, interaction.content.indexOf(' ')))
             console.log(isDefault)
-            if (!interaction.member.voice.channel) return await interaction.reply({ content: 'You are not in a voice channel!', ephemeral: true })
-            if (interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId)
-                return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true })
+
+            if (!interaction.member.voice.channel && isDefault) return await interaction.reply({ content: '❌ | You are not in a voice channel!', ephemeral: true })
+            if ((interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId) && isDefault)
+                return await interaction.reply({ content: '❌ | You are not in my voice channel!', ephemeral: true })
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
 
             const queue = player.getQueue(interaction.guildId)
     
-            if (!queue || !queue.playing) return interaction.type === `APPLICATION_COMMAND` ? 
+            if ((!queue || !queue.playing) && isDefault) return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({content: '❌ | No music is being played!'}) :
                 await interaction.reply({content: '❌ | No music is being played!'})
     
@@ -41,29 +41,31 @@ module.exports = {
                 {
                     title: interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[0],
                     author: interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[1] ? 
-                        interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[0] : `` 
+                        interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[1].trim() : `` 
                 }
                 : queue.current
 
-            console.log(title)
-            console.log(artist)
-
-            const lyrics = await lyricsFinder(author, title) 
+            let lyrics = await lyricsFinder(author, title) 
                 ? await lyricsFinder(author, title) 
                 : await lyricsFinder(``, title) ? await lyricsFinder(``, title) : false
 
+            lyrics = !lyrics ? false : //lyricefind.com
+                lyrics.match('--------------------------------------------------------------------------------') ?
+                lyrics.split('--------------------------------------------------------------------------------')[0] : lyrics
+
             if(!lyrics) return void interaction.type === `APPLICATION_COMMAND` 
-                ? await interaction.followUp({ content: `> Lyrics not found!` }) 
-                : await interaction.reply({ content: `> Lyrics not found!` })
+                ? await interaction.followUp({ content: `❌ | Lyrics not found!` }) 
+                : await interaction.reply({ content: `❌ | Lyrics not found!` })
+
 
             const lined_lyrics = lyrics.split('\n')
             const detected_language = languages[(await translate(lined_lyrics[0], {to: 'en'})).from.language.iso]
 
-            const data = detected_language.toLowerCase() !== `english` || detected_language.toLowerCase() !== `filipino` ? 
+            const data = detected_language.toLowerCase() !== `english` && detected_language.toLowerCase() !== `filipino` ? 
                 lined_lyrics.map(async i => {
                     if(i.length < 1) return i
                     return (await translate(i, {to: 'en'})).raw[0][0]
-                }) : lyrics
+                }) : lyrics.split('\n')
 
             const raw = await Promise.all(data)
 
@@ -81,8 +83,6 @@ module.exports = {
               
                 return result
             }, [])
-
-            console.log(split_lyrics)
 
             return void split_lyrics.map(async (v,i) => {
                 const result = v.join('\n')
@@ -106,7 +106,7 @@ module.exports = {
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
 
-            args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
+            error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
         }
     }
 }

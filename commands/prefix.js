@@ -1,3 +1,4 @@
+const handlers = require('../handlers/handlers')
 const settings = require('../schemas/settings')
 
 module.exports = {
@@ -11,7 +12,7 @@ module.exports = {
             required: false
         }
     ],
-    async execute(interaction, player, luka, args) {
+    async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
             const prefix = interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.options.getString('set') : 
@@ -19,14 +20,17 @@ module.exports = {
             
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
 
+            const restrict = {
+                content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_ROLES\` permissions or with \`@DJ\` named role can use this command freely!\nBeing alone with **${luka.user.username}** works too!\nUse \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to assign \`@DJ\` role to mentioned users.`
+            }
+            if(handlers.isVoiceAndRoleRestricted(interaction, false)) return void interaction.type === `APPLICATION_COMMAND` ? 
+                interaction.followUp(restrict) :
+                interaction.reply(restrict)
+
             const application_settings = (await settings.find()).find(data => data.application_id === luka.user.id)
             if(!application_settings) return await interaction.reply({
                 content: `There's something wrong within our servers, please wait for a while and try again.`
             })
-            
-            const default_prefix = application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id) ? 
-                (application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id)).prefix : 
-                application_settings.default_prefix
 
             if(!prefix) return void await interaction.reply({ content: `⚙️ | This server prefix is \`${default_prefix}\`, Example: \`${default_prefix}play\``, ephemeral: true  })
             if(prefix.length === 1 && prefix === `/`) return void await interaction.reply({ content: `❌ | This prefix is already available in slash commands!`, ephemeral: true  })
@@ -53,7 +57,7 @@ module.exports = {
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
 
-            args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
+            error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
         }
     }
 }

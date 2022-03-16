@@ -1,6 +1,6 @@
 require('dotenv').config()
 const fs = require('fs')
-const { Permissions } = Discord = require('discord.js')
+const Discord = require('discord.js')
 const Client = require('./client/Client')
 const handlers = require('./handlers/handlers')
 
@@ -28,10 +28,28 @@ for (const file of commandFiles) {
     luka.commands.set(command.name, command)
 }
 
-const slashCommands = require('./modules/slash-commands')
-
 const { Player } = require("discord-player")
 const player = new Player(luka)
+
+const slashCommands = async (luka) =>{
+    const slash_commands = await luka.api.applications(luka.user.id).commands.get()
+
+    if(slash_commands.length > 0) return
+    const commands = commandFiles.map(async files => {
+        const slash = require(`./commands/${files}`)
+
+        const { execute, ...command } = slash
+
+        await luka.api.applications(luka.user.id).commands.post({
+            data: command
+        }).then(`Success: ${slash}`)
+        .catch(console.error)
+    })
+
+    await Promise.all(commands).then(async () => {
+        console.log(await luka.api.applications(luka.user.id).commands.get())
+    })
+}
 
 const resetStatusActivity = () => {
     const status = [
@@ -68,7 +86,7 @@ player.on("trackStart", (queue, track) => {
 player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | **Track** \`${track.title}\` - Queued!`))
 player.on('botDisconnect', queue => queue.metadata.channel.send(`❌ | I was manually disconnected from 🔉**${queue.connection.channel.name}**, clearing queue!`))
 player.on('channelEmpty', queue => queue.metadata.channel.send(`❌ | Nobody is in 🔉**${queue.connection.channel.name}**, leaving...`))
-player.on('queueEnd', queue => queue.metadata.channel.send('✅ | **Queue finished!**'))
+player.on('queueEnd', queue => queue.destroyed ? console.log(``) : queue.metadata.channel.send('✅ | **Queue finished!**'))
 
 luka.on('interactionCreate', async interaction => {
     const altria = luka.guilds.cache.get(OfficialServer)
@@ -76,6 +94,7 @@ luka.on('interactionCreate', async interaction => {
     const error_logs = altria.channels.cache.get(ErrorLogs)
 
     try{
+        if(!interaction) return interaction.channel.send({ content: `Failed to handle interaction~` })
         if(!interaction.inGuild()) return await interaction.reply({ content: `⚠️ **This command cannot be used in private messages**`})
         if(!interaction.isCommand()) return
 
@@ -90,13 +109,8 @@ luka.on('interactionCreate', async interaction => {
         })
 
         const command = luka.commands.get(interaction.commandName)
-
-        if(!interaction.member.roles.cache.some(role => role.name === 'DJ') || (!interaction.member.permissions.has('ADMINISTRATOR') || !interaction.member.permissions.has('MANAGE_CHANNEL') || !interaction.member.permissions.has('MANAGE_SERVER')))
-            return interaction.reply({ 
-                content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_SERVER\` permission or \`@DJ\` named role can use this command!**\n**Use \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to give \`@DJ\` role to mentioned users.`
-            })
         
-        command.execute(interaction, player, luka, { error_logs: error_logs, handlers: handlers })    
+        command.execute(interaction, player, luka, error_logs, default_prefix)    
         interaction_logs.send({ embeds: handlers.interactionLogs(interaction).embeds })
 
     } catch(e) {
@@ -123,7 +137,7 @@ luka.on('messageCreate', async interaction => {
             (application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id)).prefix : 
             application_settings.default_prefix
     
-        if(!interaction.content.startsWith(default_prefix)) return
+        if(!interaction.content.startsWith(default_prefix)) return  
     
         const content = interaction.content
         const pos_command = content.substring(0, content.indexOf(' ')) ?
@@ -135,23 +149,11 @@ luka.on('messageCreate', async interaction => {
         })
     
         const command = luka.commands.get((pos_command.substring(1)).toLowerCase())
-
         if(!command) return
+        
+        command.execute(interaction, player, luka, error_logs, default_prefix)
 
-        const isConnected = interaction.member.voice.channel ? interaction.member.voice.channel.members.filter(m => !m.user.bot) : false
-        const unrestricted = [`play`, `lyrics`, `donate`, `help`, `nowplaying`, `queue`].find(cmd => cmd === command.name)
-        const hasDJ = interaction.member.roles.cache.some(role => role.name === 'DJ')
-        const hasPerms = (interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_ROLES))
-
-        console.log(isConnected && !(isConnected.size <= 1))
-        console.log(!unrestricted || (!hasDJ && !hasPerms))
-        if((isConnected && !(isConnected.size <= 1)) && (!unrestricted || (!hasDJ && !hasPerms)))
-            return interaction.reply({ 
-                content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_ROLES\` permissions or with \`@DJ\` named role can use this command freely!\nBeing alone with **${luka.user.username}** works too!\nUse \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to assign \`@DJ\` role to mentioned users.`
-            })
-        command.execute(interaction, player, luka, { error_logs: error_logs, handlers: handlers })
-
-        // interaction_logs.send({ embeds: handlers.interactionLogs(interaction).embeds })
+        interaction_logs.send({ embeds: handlers.interactionLogs(interaction).embeds })
     } catch(e) {
         console.log(e)
         error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
@@ -200,7 +202,7 @@ luka.once('ready', async () => {
 
   // MANAGER_CMD.permissions.add({ permissions: [manager_permissions] }).then(console.log)
 
-    // await slashCommands(luka)
+    await slashCommands(luka)
     const datenow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
     console.log(`Seraphine went online~\nDate: ${datenow}`)
 

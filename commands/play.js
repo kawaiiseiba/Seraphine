@@ -1,7 +1,6 @@
 module.exports = {
     name: 'play',
     description: 'Play Youtube/Spotify music.',
-    type: 1,
     options: [
         {
             name: 'search',
@@ -10,7 +9,7 @@ module.exports = {
             required: true
         }
     ],
-    async execute(interaction, player, luka, args) {
+    async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
             const query = interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.options.getString('search') : 
@@ -22,7 +21,7 @@ module.exports = {
     
             if(!vc.channelId) return await interaction.reply({ content: `${(interaction.type === `APPLICATION_COMMAND` ? interaction.user : interaction.author).toString()} You need to be in a voice channel to play music!`, ephemeral: true })
             if (interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId) 
-                return await interaction.reply({ content: 'You are not in my voice channel!', ephemeral: true, })
+                return await interaction.reply({ content: '❌ | You are not in my voice channel!', ephemeral: true, })
     
             const queue = player.createQueue(interaction.guild, {
                 metadata: {
@@ -70,7 +69,7 @@ module.exports = {
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
         
-            args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
+            error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
         }
     }
 }

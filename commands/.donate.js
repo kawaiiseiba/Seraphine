@@ -1,7 +1,7 @@
 module.exports = {
     name: 'donate',
     description: 'Keeps the server running.',
-    async execute(interaction, player, luka, args) {
+    async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
             const author = luka.users.cache.get('851062978416869377')
 
@@ -44,7 +44,7 @@ module.exports = {
                             id: `658538493949116428`
                         },
                         style: 5,
-                        url: `https://discord.gg/GFnCHrTE`
+                        url: `https://discord.com/404`
                     }
                 ]
             }
@@ -57,7 +57,7 @@ module.exports = {
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
 
-            args.error_logs.send({ embeds: args.handlers.errorInteractionLogs(interaction, e).embeds })
+            error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
         }
     }
 }

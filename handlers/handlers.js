@@ -1,3 +1,5 @@
+const { Permissions } = require('discord.js')
+
 module.exports = {
     interactionLogs(interaction){
         return {
@@ -99,6 +101,13 @@ module.exports = {
                 }
             ]
         }
+    },
+    isVoiceAndRoleRestricted(interaction, isVoiceNeeded = false){
+        const isConnected = isVoiceNeeded ? interaction.member.voice.channel.members.filter(m => !m.user.bot) : false
+        const hasDJ = interaction.member.roles.cache.some(role => role.name === 'DJ')
+        const hasPerms = (interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS) || interaction.member.permissions.has(Permissions.FLAGS.MANAGE_ROLES))
+
+        return (isConnected && !(isConnected.size <= 1)) && (!hasDJ && !hasPerms) || !isVoiceNeeded && (!hasDJ && !hasPerms)
     }
 }
 
