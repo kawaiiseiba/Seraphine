@@ -51,7 +51,7 @@ module.exports = {
                     await interaction.reply({content: '❌ | No music is being played!'})
     
             const loopMode = interaction.type === `APPLICATION_COMMAND` ? 
-                interaction.options.getString('mode') : 
+                interaction.options.getInteger('mode') : 
                 interaction.content.substring(interaction.content.indexOf(' ') + 1) ? QueueRepeatMode[interaction.content.substring(interaction.content.indexOf(' ') + 1).toUpperCase()] : false
     
             if(!loopMode) return
