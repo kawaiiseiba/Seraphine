@@ -19,7 +19,6 @@ module.exports = {
     async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
             const isDefault = (!interaction.options && !interaction.content.substring(0, interaction.content.indexOf(' ')))
-            console.log(isDefault)
 
             if (!interaction.member.voice.channel && isDefault) return await interaction.reply({ content: '❌ | You are not in a voice channel!', ephemeral: true })
             if ((interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId) && isDefault)
@@ -49,14 +48,17 @@ module.exports = {
                 ? await lyricsFinder(author, title) 
                 : await lyricsFinder(``, title) ? await lyricsFinder(``, title) : false
 
-            lyrics = !lyrics ? false : //lyricefind.com
-                lyrics.match('--------------------------------------------------------------------------------') ?
-                lyrics.split('--------------------------------------------------------------------------------')[0] : lyrics
+            // lyrics = !lyrics ? false : //lyricefind.com
+            //     lyrics.match('--------------------------------------------------------------------------------') ?
+            //     lyrics.split('--------------------------------------------------------------------------------')[0] : lyrics
 
             if(!lyrics) return void interaction.type === `APPLICATION_COMMAND` 
                 ? await interaction.followUp({ content: `❌ | Lyrics not found!` }) 
                 : await interaction.reply({ content: `❌ | Lyrics not found!` })
 
+            await interaction.type === `APPLICATION_COMMAND`
+                ? await interaction.followUp({ content: `✅ | Lyrics found! Converting to readable format...` }) 
+                : await interaction.reply({ content: `✅ | Lyrics found! Converting to readable format...` }) 
 
             const lined_lyrics = lyrics.split('\n')
             const detected_language = languages[(await translate(lined_lyrics[0], {to: 'en'})).from.language.iso]
@@ -95,12 +97,6 @@ module.exports = {
                     ? await interaction.followUp({ content: `>>> ${result}` }) 
                     : await interaction.channel.send({ content: `>>> ${result}` })
             })
-
-            return console.log(result)
-            
-            return void interaction.type === `APPLICATION_COMMAND` 
-                ? await interaction.followUp({ content: `>>> **${title}**\n\n${result}` }) 
-                : await interaction.reply({ content: `>>> **${title}**\n\n${result}` })
         } catch (e){
             interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
