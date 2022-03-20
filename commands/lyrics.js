@@ -1,18 +1,16 @@
-const lyricsFinder = require('lyrics-finder')
-const { languages } = translate = require('@imlinhanchao/google-translate-api')
+// const lyricsFinder = require('lyrics-finder')
+// const { languages } = translate = require('@imlinhanchao/google-translate-api')
+require('dotenv').config()
+const Genius = require("genius-lyrics");
+const Finder = new Genius.Client(process.env.GeniusToken)
 
 module.exports = {
     name: 'lyrics',
-    description: 'Searches the lyrics of the current song or by song title or artist',
+    description: 'Searches the lyrics of the current song or by song title or artist.',
     options: [
         {
-            name: 'title',
-            description: 'The title of the song',
-            type: 3
-        },
-        {
-            name: 'artist',
-            description: 'The title of the song',
+            name: 'title & artist',
+            description: 'The "title by artist" search format.',
             type: 3
         }
     ],
@@ -30,19 +28,16 @@ module.exports = {
             if ((!queue || !queue.playing) && isDefault) return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({content: '❌ | No music is being played!'}) :
                 await interaction.reply({content: '❌ | No music is being played!'})
-    
-            let { title, author } = interaction.type === `APPLICATION_COMMAND` ? 
-                { 
-                    title: interaction.options.getString('search') ? interaction.options.getString('search') : ``,
-                    author: interaction.options.getString('author') ? interaction.options.getString('author') : ``,
-                } :
+
+            const query = interaction.type === `APPLICATION_COMMAND` ? 
+                interaction.options.getString('title_by_artist') :
                 interaction.content.substring(0, interaction.content.indexOf(' ')) ? 
-                {
-                    title: interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[0],
-                    author: interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[1] ? 
-                        interaction.content.substring(interaction.content.indexOf(' ') + 1).split('-')[1].trim() : `` 
-                }
-                : queue.current
+                    interaction.content.substring(0, interaction.content.indexOf(' ')) : 
+                    `${queue.current.title} by ${queue.current.author}` 
+            
+            const searches = await Finder.songs.search(query)
+
+            return console.log(searches)
 
             let lyrics = await lyricsFinder(author, title) 
                 ? await lyricsFinder(author, title) 
@@ -55,10 +50,6 @@ module.exports = {
             if(!lyrics) return void interaction.type === `APPLICATION_COMMAND` 
                 ? await interaction.followUp({ content: `❌ | Lyrics not found!` }) 
                 : await interaction.reply({ content: `❌ | Lyrics not found!` })
-
-            await interaction.type === `APPLICATION_COMMAND`
-                ? await interaction.followUp({ content: `✅ | Lyrics found! Converting to readable format...` }) 
-                : await interaction.reply({ content: `✅ | Lyrics found! Converting to readable format...` }) 
 
             const lined_lyrics = lyrics.split('\n')
             const detected_language = languages[(await translate(lined_lyrics[0], {to: 'en'})).from.language.iso]

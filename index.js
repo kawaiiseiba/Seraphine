@@ -32,7 +32,21 @@ const { Player } = require("discord-player")
 const player = new Player(luka)
 
 const slashCommands = async (luka) =>{
-    const slash_commands = await luka.api.applications(luka.user.id).commands.get()
+    const slash_commands = await luka.api.applications(luka.user.id).commands('953518303240912919').patch({
+        data: {
+            name: 'lyrics',
+            description: 'Searches the lyrics of the current song or by song title or artist.',
+            options: [
+                {
+                    name: 'title_by_artist',
+                    description: 'The "title by artist" search format.',
+                    type: 3
+                }
+            ]
+        }
+    })
+
+    console.log(slash_commands)
 
     if(slash_commands.length > 0) return
     const commands = commandFiles.map(async files => {
