@@ -25,13 +25,13 @@ module.exports = {
             const restrict = {
                 content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_ROLES\` permissions or with \`@DJ\` named role can use this command freely!\nBeing alone with **${luka.user.username}** works too!\nUse \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to assign \`@DJ\` role to mentioned users.`
             }
-            if(handlers.isVoiceAndRoleRestricted(interaction, false)) return void interaction.type === `APPLICATION_COMMAND` ? 
+            if(handlers.isVoiceAndRoleRestricted(interaction, false)) return interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp(restrict) :
                 interaction.reply(restrict)
 
             const member = await interaction.guild.members.cache.get(user.id)
 
-            if(member.roles.cache.some(role => role.name === 'DJ')) return void interaction.type === `APPLICATION_COMMAND` ? 
+            if(member.roles.cache.some(role => role.name === 'DJ')) return interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: `✅ | ${user.toString()}, Already got the role!` }) :
                 interaction.reply({ content:  `✅ | ${user.toString()}, Already got the role!` })
 
@@ -50,14 +50,14 @@ module.exports = {
                 error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
             })
 
-            if(!djRole) return void interaction.type === `APPLICATION_COMMAND` ? 
+            if(!djRole) return interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: `🚫 | **${luka.user.username}** doesn't have \`Manage Roles\` permission. Try again after you give me \`Manage Roles\` permission...`}) :
                 interaction.reply({ content: `🚫 | **${luka.user.username}** doesn't have \`Manage Roles\` permission. Try again after you give me \`Manage Roles\` permission...`})
 
             member.roles.add(djRole)
 
             const content = `✅ | \`@${djRole.name}\` role has been ${!isDJExist ? `created & assigned` : `assigned`} to ${user.toString()}`
-            return void interaction.type === `APPLICATION_COMMAND` ? 
+            return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({ content }) :
                 await interaction.reply({ content })
 

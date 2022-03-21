@@ -49,7 +49,7 @@ module.exports = {
                 ]
             }
             
-            return void interaction.type === `APPLICATION_COMMAND` 
+            return interaction.type === `APPLICATION_COMMAND` 
                 ? await interaction.followUp({ embeds:[embed], components: [components] }) 
                 : await interaction.reply({ embeds:[embed], components: [components] })
         } catch (e){

@@ -5,13 +5,13 @@ module.exports = {
     description: `See what's currently being played.`,
     async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
-            if (!interaction.member.voice.channel) return void await interaction.reply({ content: '❌ | You are not in a voice channel!', ephemeral: true })
+            if (!interaction.member.voice.channel) return await interaction.reply({ content: '❌ | You are not in a voice channel!', ephemeral: true })
             if (interaction.guild.me.voice.channelId &&interaction.member.voice.channelId !== interaction.guild.me.voice.channelId)
-                return void await interaction.reply({ content: '❌ | You are not in my voice channel!', ephemeral: true })
+                return await interaction.reply({ content: '❌ | You are not in my voice channel!', ephemeral: true })
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
             
             const queue = player.getQueue(interaction.guildId)
-            if (typeof queue === "undefined") return void interaction.type === `APPLICATION_COMMAND` ?
+            if (typeof queue === "undefined") return interaction.type === `APPLICATION_COMMAND` ?
                 await interaction.followUp({content: '❌ | No music is being played!'}) :
                 await interaction.reply({content: '❌ | No music is being played!'})
     
@@ -53,7 +53,7 @@ module.exports = {
                 }
             }
     
-            return void interaction.type === `APPLICATION_COMMAND` ? 
+            return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({ embeds: [embed] }) :
                 await interaction.reply({ embeds: [embed] })
         } catch (e){

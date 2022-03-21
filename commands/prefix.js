@@ -32,9 +32,9 @@ module.exports = {
                 content: `There's something wrong within our servers, please wait for a while and try again.`
             })
 
-            if(!prefix) return void await interaction.reply({ content: `⚙️ | This server prefix is \`${default_prefix}\`, Example: \`${default_prefix}play\``, ephemeral: true  })
-            if(prefix.length === 1 && prefix === `/`) return void await interaction.reply({ content: `❌ | This prefix is already available in slash commands!`, ephemeral: true  })
-            if(prefix.length > 2) return void await interaction.reply({ content: `❌ | A maximum of 2 character length only!`, ephemeral: true })
+            if(!prefix) return await interaction.reply({ content: `⚙️ | This server prefix is \`${default_prefix}\`, Example: \`${default_prefix}play\``, ephemeral: true  })
+            if(prefix.length === 1 && prefix === `/`) return await interaction.reply({ content: `❌ | This prefix is already available in slash commands!`, ephemeral: true  })
+            if(prefix.length > 2) return await interaction.reply({ content: `❌ | A maximum of 2 character length only!`, ephemeral: true })
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
 
             const hasPrefix = application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id)
@@ -44,11 +44,11 @@ module.exports = {
                 prefix: prefix
             })
 
-            if(await application_settings.save()) return void interaction.type === `APPLICATION_COMMAND` ? 
+            if(await application_settings.save()) return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({ content: `✅ | Prefix has been set to \`${prefix}\`!` }) : 
                 await interaction.reply({ content: `✅ | Prefix has been set to \`${prefix}\`!` })
 
-            return void interaction.type === `APPLICATION_COMMAND` ? 
+            return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({ content: '❌ | Something went wrong!' }) :
                 await interaction.reply({ content: '❌ | Something went wrong!' })
 
