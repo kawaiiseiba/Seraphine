@@ -18,12 +18,12 @@ module.exports = {
                 interaction.reply(restrict)
 
             const queue = player.getQueue(interaction.guildId)
-            if (typeof queue === "undefined") return void interaction.type === `APPLICATION_COMMAND` ? 
+            if (typeof queue === "undefined") return await interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: '❌ | No music in the queue!' }) :
                 interaction.reply({ content: '❌ | No music in the queue!' })
               
             queue.clear()
-            return void interaction.type === `APPLICATION_COMMAND` ? 
+            return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({ content: '❌ | Queue cleared.' }) : 
                 await interaction.reply({ content: '❌ | Queue cleared.' })
         } catch (e){

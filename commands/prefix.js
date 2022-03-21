@@ -23,7 +23,7 @@ module.exports = {
             const restrict = {
                 content: `>>> Only those with \`ADMINISTRATOR\`, \`MANAGE_CHANNEL\`, \`MANAGE_ROLES\` permissions or with \`@DJ\` named role can use this command freely!\nBeing alone with **${luka.user.username}** works too!\nUse \`${default_prefix}dj <@user>\` or \`/dj user: <@user>\` to assign \`@DJ\` role to mentioned users.`
             }
-            if(handlers.isVoiceAndRoleRestricted(interaction, false)) return void interaction.type === `APPLICATION_COMMAND` ? 
+            if(handlers.isVoiceAndRoleRestricted(interaction, false)) return interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp(restrict) :
                 interaction.reply(restrict)
 
