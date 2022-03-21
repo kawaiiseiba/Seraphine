@@ -2,7 +2,8 @@
 // const { languages } = translate = require('@imlinhanchao/google-translate-api')
 require('dotenv').config()
 const Genius = require("genius-lyrics");
-const Finder = new Genius.Client(process.env.GeniusToken)
+const handlers = require('../handlers/handlers');
+const Finder = new Genius.Client(process.env.GeniusLyrics)
 
 module.exports = {
     name: 'lyrics',
@@ -16,7 +17,7 @@ module.exports = {
     ],
     async execute(interaction, player, luka, error_logs, default_prefix) {
         try{
-            const isDefault = (!interaction.options && !interaction.content.substring(0, interaction.content.indexOf(' ')))
+            const isDefault = (interaction.type === `APPLICATION_COMMAND` && interaction.options.data.length < 1) || interaction.type !== `APPLICATION_COMMAND` && !interaction.content?.substring(0, interaction.content.indexOf(' '))
 
             if (!interaction.member.voice.channel && isDefault) return await interaction.reply({ content: '❌ | You are not in a voice channel!', ephemeral: true })
             if ((interaction.guild.me.voice.channelId && interaction.member.voice.channelId !== interaction.guild.me.voice.channelId) && isDefault)
@@ -25,48 +26,36 @@ module.exports = {
 
             const queue = player.getQueue(interaction.guildId)
     
-            if ((!queue || !queue.playing) && isDefault) return interaction.type === `APPLICATION_COMMAND` ? 
+            if (typeof queue === "undefined" && isDefault) return interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({content: '❌ | No music is being played!'}) :
                 await interaction.reply({content: '❌ | No music is being played!'})
 
-            const query = interaction.type === `APPLICATION_COMMAND` ? 
-                interaction.options.getString('title_by_artist') :
-                interaction.content.substring(0, interaction.content.indexOf(' ')) ? 
-                    interaction.content.substring(0, interaction.content.indexOf(' ')) : 
-                    `${queue.current.title} by ${queue.current.author}` 
-            
+            const query = isDefault ? 
+                queue.current.title : interaction.type === `APPLICATION_COMMAND` ? 
+                    interaction.options.getString('title_by_artist') : 
+                    interaction.content?.substring(interaction.content.indexOf(' ') + 1)
+
             const searches = await Finder.songs.search(query)
 
-            return console.log(searches)
+            const { title, artist } = query.split('by').length <= 1 ? 
+                { title: query, artist: null } :
+                { title: query.split('by')[0].trim(), artist: query.split('by')[1].trim() }
 
-            let lyrics = await lyricsFinder(author, title) 
-                ? await lyricsFinder(author, title) 
-                : await lyricsFinder(``, title) ? await lyricsFinder(``, title) : false
+            const filter = searches.find(song => artist && song.artist.name.toLowerCase().includes(artist))
 
-            // lyrics = !lyrics ? false : //lyricefind.com
-            //     lyrics.match('--------------------------------------------------------------------------------') ?
-            //     lyrics.split('--------------------------------------------------------------------------------')[0] : lyrics
+            const song = filter ? filter : searches[0]
 
-            if(!lyrics) return void interaction.type === `APPLICATION_COMMAND` 
+            if(!song) return await interaction.type === `APPLICATION_COMMAND` 
                 ? await interaction.followUp({ content: `❌ | Lyrics not found!` }) 
                 : await interaction.reply({ content: `❌ | Lyrics not found!` })
 
-            const lined_lyrics = lyrics.split('\n')
-            const detected_language = languages[(await translate(lined_lyrics[0], {to: 'en'})).from.language.iso]
-
-            const data = detected_language.toLowerCase() !== `english` && detected_language.toLowerCase() !== `filipino` ? 
-                lined_lyrics.map(async i => {
-                    if(i.length < 1) return i
-                    return (await translate(i, {to: 'en'})).raw[0][0]
-                }) : lyrics.split('\n')
-
-            const raw = await Promise.all(data)
+            const lyrics = (await song.lyrics()).split('\n\n')
 
             let str = ``
             
-            const split_lyrics = raw.reduce((result, v, i) => {
+            const split_lyrics = lyrics.reduce((result, v, i) => {
                 str += v
-                const index = Math.floor(str.length/3500)
+                const index = Math.floor(str.length/1100)
               
                 if(!result[index]) {
                     result[index] = [] // start a new chunk
@@ -77,18 +66,31 @@ module.exports = {
                 return result
             }, [])
 
-            return void split_lyrics.map(async (v,i) => {
-                const result = v.join('\n')
+            split_lyrics.map(async (v,i) => {
+                const result = v.join('\n\n')
 
-                if(i < 1) return void interaction.type === `APPLICATION_COMMAND` 
-                    ? await interaction.followUp({ content: `>>> **${title}**\n\n${result}` }) 
-                    : await interaction.reply({ content: `>>> **${title}**\n\n${result}` })
+                const embed = {
+                    title: song.title,
+                    color: 3092790,
+                    thumbnail: {
+                        url: song.image
+                    },
+                    description: `**Artist**: \`${song.artist.name}\`\n\n\`\`\`${result}\`\`\``
+                }
 
-                return void interaction.type === `APPLICATION_COMMAND` 
-                    ? await interaction.followUp({ content: `>>> ${result}` }) 
-                    : await interaction.channel.send({ content: `>>> ${result}` })
+                if(i < 1) return interaction.type === `APPLICATION_COMMAND` 
+                    ? await interaction.followUp({ embeds: [embed] }) 
+                    : await interaction.reply({ embeds: [embed] })
+
+                const additional_embed = {
+                    color: 3092790,
+                    description: `\`\`\`${result}\`\`\``
+                }
+
+                await interaction.channel.send({ embeds: [additional_embed] })
             })
         } catch (e){
+            console.log(e)
             interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })

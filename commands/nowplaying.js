@@ -1,3 +1,4 @@
+const { Queue } = require("discord-player")
 
 module.exports = {
     name: 'nowplaying',
@@ -10,7 +11,7 @@ module.exports = {
             if(interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
             
             const queue = player.getQueue(interaction.guildId)
-            if (!queue || !queue.playing) return void interaction.type === `APPLICATION_COMMAND` ?
+            if (typeof queue === "undefined") return void interaction.type === `APPLICATION_COMMAND` ?
                 await interaction.followUp({content: '❌ | No music is being played!'}) :
                 await interaction.reply({content: '❌ | No music is being played!'})
     

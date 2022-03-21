@@ -18,14 +18,14 @@ module.exports = {
                 interaction.reply(restrict)
 
             const queue = player.getQueue(interaction.guildId)
-            if (!queue || !queue.playing) return void interaction.type === `APPLICATION_COMMAND` ? 
+            if (typeof queue === "undefined") return void interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: '❌ | No music is being played!' }) :
                 interaction.reply({ content: '❌ | No music is being played!' })
     
             queue.destroy()
-            return queue.destroyed ? interaction.type === `APPLICATION_COMMAND` ? 
+            return interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({content: `🛑 | ${luka.user.username} stopped playing!`}) : 
-                interaction.reply({content: `🛑 | ${luka.user.username} stopped playing!`}) : console.log("Cannot go further because the queue is destroyed")
+                interaction.reply({content: `🛑 | ${luka.user.username} stopped playing!`})
         } catch (e){
             interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :

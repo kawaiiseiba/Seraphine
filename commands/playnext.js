@@ -32,17 +32,19 @@ module.exports = {
             if(!query) return
 
             const queue = player.getQueue(interaction.guildId)
-            if (!queue || !queue.playing) return void interaction.type === `APPLICATION_COMMAND` ? 
+            if (typeof queue === "undefined") return void interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: '❌ | No music is being played!' }) :
                 interaction.reply({ content: '❌ | No music is being played!' })
 
             const searchResult = await player.search(query, {
                 requestedBy: interaction.type === `APPLICATION_COMMAND` ? interaction.user : interaction.author
             }).catch(() => {})
+
+            const not_found = `>>> No results were found!\nCheck whether the song or playlist exists publicly.\nI won't play songs that is flagged inappropriate, age-restricted or offensive.`
     
             if (!searchResult || !searchResult.tracks.length) return void interaction.type === `APPLICATION_COMMAND` ?
-                interaction.followUp({content: 'No results were found!'}) :
-                interaction.reply({content: 'No results were found!'})
+                interaction.followUp({content: not_found }) :
+                interaction.reply({content: not_found })
       
             interaction.type === `APPLICATION_COMMAND` ? 
                 await interaction.followUp({ content: `🔎 | **Searching ${searchResult.playlist ? 'playlist' : 'track'}...**` }) :

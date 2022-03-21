@@ -1,5 +1,4 @@
 const handlers = require('../handlers/handlers')
-const settings = require('../schemas/settings')
 
 module.exports = {
     name: 'dj',

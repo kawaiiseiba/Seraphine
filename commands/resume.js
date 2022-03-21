@@ -18,7 +18,7 @@ module.exports = {
                 interaction.reply(restrict)
 
             const queue = player.getQueue(interaction.guildId)
-            if (!queue || !queue.playing) return void interaction.type === `APPLICATION_COMMAND`? 
+            if (typeof queue === "undefined") return void interaction.type === `APPLICATION_COMMAND`? 
                 interaction.followUp({ content: '❌ | No music is being played!' }) :
                 interaction.followUp({ content: '❌ | No music is being played!' })
             

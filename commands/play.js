@@ -36,6 +36,17 @@ module.exports = {
                 },
                 initialVolume: 50
             })
+
+            if (interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
+            const searchResult = await player.search(query, {
+                requestedBy: interaction.type === `APPLICATION_COMMAND` ? interaction.user : interaction.author
+            }).catch(() => {})
+    
+            const not_found = `>>> No results were found!\nCheck whether the song or playlist exists publicly.\nI won't play songs that is flagged inappropriate, age-restricted or offensive.`
+    
+            if (!searchResult || !searchResult.tracks.length)return interaction.type === `APPLICATION_COMMAND` ? 
+                await interaction.followUp({content: not_found }) : 
+                await interaction.reply({ content: not_found })
     
             try {
                 if (!queue.connection) await queue.connect(interaction.member.voice.channel)
@@ -43,17 +54,6 @@ module.exports = {
                 queue.destroy()
                 return await interaction.reply({ content: "Could not join your voice channel!", ephemeral: true })
             }
-    
-            if (interaction.type === `APPLICATION_COMMAND`) await interaction.deferReply()
-            const searchResult = await player.search(query, {
-                requestedBy: interaction.type === `APPLICATION_COMMAND` ? interaction.user : interaction.author
-            }).catch(() => {})
-    
-            const not_found = '> No results were found!'
-    
-            if (!searchResult || !searchResult.tracks.length)return interaction.type === `APPLICATION_COMMAND` ? 
-                await interaction.followUp({content: not_found }) : 
-                await interaction.reply({ content: not_found })
 
             const result = `🔎 | **Searching ${searchResult.playlist ? 'playlist' : 'track'}...**`
 

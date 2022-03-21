@@ -32,21 +32,7 @@ const { Player } = require("discord-player")
 const player = new Player(luka)
 
 const slashCommands = async (luka) =>{
-    const slash_commands = await luka.api.applications(luka.user.id).commands('953518303240912919').patch({
-        data: {
-            name: 'lyrics',
-            description: 'Searches the lyrics of the current song or by song title or artist.',
-            options: [
-                {
-                    name: 'title_by_artist',
-                    description: 'The "title by artist" search format.',
-                    type: 3
-                }
-            ]
-        }
-    })
-
-    console.log(slash_commands)
+    const slash_commands = await luka.api.applications(luka.user.id).commands.get()
 
     if(slash_commands.length > 0) return
     const commands = commandFiles.map(async files => {
@@ -100,7 +86,7 @@ player.on("trackStart", (queue, track) => {
 player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | **Track** \`${track.title}\` - Queued!`))
 player.on('botDisconnect', queue => queue.metadata.channel.send(`❌ | I was manually disconnected from 🔉**${queue.connection.channel.name}**, clearing queue!`))
 player.on('channelEmpty', queue => queue.metadata.channel.send(`❌ | Nobody is in 🔉**${queue.connection.channel.name}**, leaving...`))
-player.on('queueEnd', queue => queue.destroyed ? console.log(``) : queue.metadata.channel.send('✅ | **Queue finished!**'))
+player.on('queueEnd', queue => queue.metadata.channel.send('✅ | **Queue finished!**'))
 
 luka.on('interactionCreate', async interaction => {
     const altria = luka.guilds.cache.get(OfficialServer)
