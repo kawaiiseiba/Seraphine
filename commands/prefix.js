@@ -7,7 +7,7 @@ module.exports = {
     options: [
         {
             name: 'set',
-            type: 4,
+            type: 3,
             description: 'Characters except whitespace and "/", Max length 2.',
             required: false
         }

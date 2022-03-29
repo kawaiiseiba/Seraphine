@@ -1,4 +1,5 @@
 const { Queue } = require("discord-player")
+const handlers = require("../handlers/handlers")
 
 module.exports = {
     name: 'nowplaying',

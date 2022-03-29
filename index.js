@@ -31,8 +31,9 @@ for (const file of commandFiles) {
 const { Player } = require("discord-player")
 const player = new Player(luka)
 
-const slashCommands = async (luka) =>{
-    const slash_commands = await luka.api.applications(luka.user.id).commands.get()
+const slashCommands = async (luka) => {
+
+    const slash_commands = await luka.api.applications(luka.user.id).commands().get()
 
     if(slash_commands.length > 0) return
     const commands = commandFiles.map(async files => {
@@ -105,7 +106,7 @@ luka.on('interactionCreate', async interaction => {
         })
 
         if(application_settings.isMaintenance.isExist) return await interaction.reply({
-            content: `${luka.user.username} is under maintenance.\nReason: ${data.isMaintenance.reason}`
+            content: `${luka.user.username} is under maintenance.\nReason: ${application_settings.isMaintenance.reason}`
         })
 
         const default_prefix = application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id) ? 
