@@ -180,9 +180,9 @@ luka.on('guildCreate', async guild => {
 })
 
 luka.on('guildDelete', async guild => {
-    const altria = melty.guilds.cache.get(OfficialServer)
+    const altria = luka.guilds.cache.get(OfficialServer)
     const guild_logs = altria.channels.cache.get(GuildJoined)
-    const guild_count = melty.guilds.cache.size
+    const guild_count = luka.guilds.cache.size
     const guild_count_vc = altria.channels.cache.get(GuildCount)
 
     await guild_logs.send({ content: `**${luka.user.username}** leaves **${guild.name}** server @ <t:${Math.floor(Date.now() / 1000)}:F>` })
