@@ -10,7 +10,7 @@ module.exports = {
     description: 'Searches the lyrics of the current song or by song title or artist.',
     options: [
         {
-            name: 'title & artist',
+            name: 'title_by_artist',
             description: 'The "title by artist" search format.',
             type: 3
         }

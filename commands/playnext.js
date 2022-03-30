@@ -47,9 +47,10 @@ module.exports = {
                 interaction.reply({content: not_found })
       
             interaction.type === `APPLICATION_COMMAND` ? 
-                await interaction.followUp({ content: `🔎 | **Searching ${searchResult.playlist ? 'playlist' : 'track'}...**` }) :
+                await interaction.followUp({ content: `🔎 | ${searchResult.playlist ? `**Playlist detected!** I only add 1 song atop of the queue. 1st song in the playlist added!` : `**Searching track...**`}` }) :
                 await interaction.reply({ content: `🔎 | **Searching ${searchResult.playlist ? 'playlist' : 'track'}...**` })
-            searchResult.playlist ? queue.insert(searchResult.tracks, 0) : queue.insert(searchResult.tracks[0], 0)
+
+            queue.insert(searchResult.tracks[0], 0)
         } catch (e){
             interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :

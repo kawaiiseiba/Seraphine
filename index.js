@@ -81,7 +81,7 @@ player.on('error', (queue, error) => console.log(`[${queue.guild.name}] Error em
 player.on('connectionError', (queue, error) => console.log(`[${queue.guild.name}] Error emitted from the connection: ${error.message}`))
 player.on("trackStart", (queue, track) => {
     queue.guild.id === OfficialServer ? 
-        queue.guild.channels.cache.get('890153344956514335').send(`**Playing** 🎶 \`${track.title}\` - Now  in 🔉**${queue.connection.channel.name}**!\n${track.url}`) : 
+        queue.guild.channels.cache.get(process.env.NowPlaying).send(`**Playing** 🎶 \`${track.title}\` - Now  in 🔉**${queue.connection.channel.name}**!\n${track.url}`) : 
         queue.metadata.channel.send(`**Playing** 🎶 \`${track.title}\` - Now in 🔉**${queue.connection.channel.name}**!`)
 })
 player.on('trackAdd', (queue, track) => queue.metadata.channel.send(`🎶 | **Track** \`${track.title}\` - Queued!`))
@@ -101,12 +101,14 @@ luka.on('interactionCreate', async interaction => {
 
         const application_settings = (await settings.find()).find(data => data.application_id === luka.user.id)
 
-        if(!application_settings) return await msg.reply({
-            content: `There's something wrong within our servers, please wait for a while and try again.`
+        if(!application_settings) return await interaction.reply({
+            content: `There's something wrong within our servers, please wait for a while and try again.`,
+            ephemeral: true
         })
 
         if(application_settings.isMaintenance.isExist) return await interaction.reply({
-            content: `${luka.user.username} is under maintenance.\nReason: ${application_settings.isMaintenance.reason}`
+            content: `${luka.user.username} is under maintenance.\nReason: ${application_settings.isMaintenance.reason}`,
+            ephemeral: true
         })
 
         const default_prefix = application_settings.server_prefix.find(data => data.guild_id === interaction.guild.id) ? 

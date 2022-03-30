@@ -1,3 +1,5 @@
+const handlers = require("../handlers/handlers")
+
 module.exports = {
     name: 'play',
     description: 'Play Youtube/Spotify music.',
@@ -66,7 +68,7 @@ module.exports = {
         } catch (e){
             console.log(e)
             interaction.type === `APPLICATION_COMMAND` ? 
-                interaction.followUp({ content: 'There was an error trying to execute that command: ' + e.message }) :
+                interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message, ephemeral: true }) :
                 interaction.reply({ content: 'There was an error trying to execute that command: ' + e.message })
         
             error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
