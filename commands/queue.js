@@ -75,8 +75,8 @@ module.exports = {
             }
     
             const message = interaction.type === `APPLICATION_COMMAND` ? 
-                await interaction.followUp({ embeds: [embed], components: components(page) }) : 
-                await interaction.reply({ embeds: [embed], components: components(page) }) 
+                await interaction.followUp({ embeds: [embed], components: queue.tracks.length > 10 ? components(page) : [] }) : 
+                await interaction.reply({ embeds: [embed], components: queue.tracks.length > 10 ? components(page) : [] }) 
             
             
             if(pagination) {
@@ -85,54 +85,46 @@ module.exports = {
                 const collector = interaction.channel.createMessageComponentCollector({ filter, max: 18, time: 60000 })
     
                 collector.on('collect', async i => {
-                    try {
-                        if (i.customId === 'prev_page') {
-                            page -= 1
-    
-                            return await i.update({ 
-                                embeds: [
-                                    {
-                                        color: 3092790,
-                                        title: `Queue for ${queue.guild.name}`,
-                                        description: `__**Now Playing**:__\n[${current.title}](${current.url})\n\`${current.duration} Requested by: ${current.requestedBy.tag}\`\n${upNext.length != 0 ? `\n__**Up Next**:__\n${pagination[page - 1].join('\n\n')}` : ''}`,
-                                        thumbnail: {
-                                            url: !queue.guild.iconURL() ? user.displayAvatarURL({ dynamic: true }) : queue.guild.iconURL()
-                                        },
-                                        footer: {
-                                            iconURL: user.displayAvatarURL({ dynamic: true }),
-                                            text: `Page ${page}/${pagination.length} | Loop: ${queue.repeatMode === 1 ? '✅' : '❌' } | Queue Loop: ${queue.repeatMode === 2 ? '✅' : '❌' }`
-                                        }
+                    if (i.customId === 'prev_page') {
+                        page -= 1
+
+                        return await i.update({ 
+                            embeds: [
+                                {
+                                    color: 3092790,
+                                    title: `Queue for ${queue.guild.name}`,
+                                    description: `__**Now Playing**:__\n[${current.title}](${current.url})\n\`${current.duration} Requested by: ${current.requestedBy.tag}\`\n${upNext.length != 0 ? `\n__**Up Next**:__\n${pagination[page - 1].join('\n\n')}` : ''}`,
+                                    thumbnail: {
+                                        url: !queue.guild.iconURL() ? user.displayAvatarURL({ dynamic: true }) : queue.guild.iconURL()
+                                    },
+                                    footer: {
+                                        iconURL: user.displayAvatarURL({ dynamic: true }),
+                                        text: `Page ${page}/${pagination.length} | Loop: ${queue.repeatMode === 1 ? '✅' : '❌' } | Queue Loop: ${queue.repeatMode === 2 ? '✅' : '❌' }`
                                     }
-                                ],
-                                components: components(page)
-                            })
-                        } else if (i.customId === 'next_page') {
-                            page += 1
-    
-                            return await i.update({ 
-                                embeds: [
-                                    {
-                                        color: 3092790,
-                                        title: `Queue for ${queue.guild.name}`,
-                                        description: `__**Now Playing**:__\n[${current.title}](${current.url})\n\`${current.duration} Requested by: ${current.requestedBy.tag}\`\n${upNext.length != 0 ? `\n__**Up Next**:__\n${pagination[page - 1].join('\n\n')}` : ''}`,
-                                        thumbnail: {
-                                            url: !queue.guild.iconURL() ? user.displayAvatarURL({ dynamic: true }) : queue.guild.iconURL()
-                                        },
-                                        footer: {
-                                            iconURL: user.displayAvatarURL({ dynamic: true }),
-                                            text: `Page ${page}/${pagination.length} | Loop: ${queue.repeatMode === 1 ? '✅' : '❌' } | Queue Loop: ${queue.repeatMode === 2 ? '✅' : '❌' }`
-                                        }
+                                }
+                            ],
+                            components: components(page)
+                        })
+                    } else if (i.customId === 'next_page') {
+                        page += 1
+
+                        return await i.update({ 
+                            embeds: [
+                                {
+                                    color: 3092790,
+                                    title: `Queue for ${queue.guild.name}`,
+                                    description: `__**Now Playing**:__\n[${current.title}](${current.url})\n\`${current.duration} Requested by: ${current.requestedBy.tag}\`\n${upNext.length != 0 ? `\n__**Up Next**:__\n${pagination[page - 1].join('\n\n')}` : ''}`,
+                                    thumbnail: {
+                                        url: !queue.guild.iconURL() ? user.displayAvatarURL({ dynamic: true }) : queue.guild.iconURL()
+                                    },
+                                    footer: {
+                                        iconURL: user.displayAvatarURL({ dynamic: true }),
+                                        text: `Page ${page}/${pagination.length} | Loop: ${queue.repeatMode === 1 ? '✅' : '❌' } | Queue Loop: ${queue.repeatMode === 2 ? '✅' : '❌' }`
                                     }
-                                ],
-                                components: components(page)
-                            })
-                        }
-                    } catch(e) {
-                        interaction.type === `APPLICATION_COMMAND` ? 
-                            interaction.followUp({ content: 'There was an error trying to execute that interaction: ' + e.message, ephemeral: true }) :
-                            interaction.reply({ content: 'There was an error trying to execute that interaction: ' + e.message })
-            
-                        error_logs.send({ embeds: handlers.errorInteractionLogs(interaction, e).embeds })
+                                }
+                            ],
+                            components: components(page)
+                        })
                     }
                 })
     

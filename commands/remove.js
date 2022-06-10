@@ -32,7 +32,10 @@ module.exports = {
                 interaction.options.getInteger('track') - 1 : 
                 interaction.content.substring(0, interaction.content.indexOf(' ')) ? parseInt(interaction.content.substring(interaction.content.indexOf(' ') + 1)) - 1 : false
 
-            if(!number) return
+            if(number === false) return interaction.type === `APPLICATION_COMMAND` ? 
+                interaction.followUp({ content: 'There was an error trying to execute that command' }) :
+                interaction.reply({ content: 'There was an error trying to execute that command' })
+
             if (number > queue.tracks.length) return interaction.type === `APPLICATION_COMMAND` ? 
                 interaction.followUp({ content: '❌ | Track number greater than queue depth!' }) :
                 interaction.reply({ content: '❌ | Track number greater than queue depth!' })
